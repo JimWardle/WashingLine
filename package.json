@@ -1,0 +1,23 @@
+{
+    "name": "smart-washing-predictor",
+    "version": "1.0.0",
+    "description": "Smart washing line predictor using Met Office weather data",
+    "main": "index.html",
+    "scripts": {
+      "build": "echo 'Build complete'",
+      "dev": "python -m http.server 8000 || python3 -m http.server 8000"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/YOUR_USERNAME/smart-washing-predictor.git"
+    },
+    "keywords": [
+      "weather",
+      "washing",
+      "met-office",
+      "forecast"
+    ],
+    "author": "Your Name",
+    "license": "MIT",
+    "devDependencies": {}
+  }
