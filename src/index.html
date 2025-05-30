@@ -436,34 +436,28 @@
 
     <script>
         // ========================================
-        // MET OFFICE API CONFIGURATION
+        // WEATHER API CONFIGURATION
         // ========================================
-        // This will be replaced by GitHub Actions with the real API key
-        const MET_OFFICE_API_KEY = 'YOUR_API_KEY_HERE';
+        // Using OpenWeatherMap API (browser-friendly with CORS support)
+        // TODO: Replace with your actual OpenWeatherMap API key
+        const WEATHER_API_KEY = 'YOUR_API_KEY_HERE';
         
-        // Met Office API endpoints with CORS proxy
-        const MET_OFFICE_BASE_URL = 'https://data.hub.api.metoffice.gov.uk';
-        const CORS_PROXY = 'https://corsproxy.io/?';
-        const HOURLY_SPOT_ENDPOINT = '/sitespecific/v0/point/hourly';
-        const THREE_HOURLY_SPOT_ENDPOINT = '/sitespecific/v0/point/three-hourly';
+        // OpenWeatherMap API endpoints
+        const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
+        const CURRENT_WEATHER_ENDPOINT = '/weather';
+        const FORECAST_ENDPOINT = '/forecast';
 
-        // Check if we're using real API key - updated logic
-        const isUsingRealAPI = MET_OFFICE_API_KEY && 
-                              MET_OFFICE_API_KEY.length > 50 && 
-                              MET_OFFICE_API_KEY !== 'YOUR_API_KEY_HERE' &&
-                              !MET_OFFICE_API_KEY.includes('YOUR_API_KEY');
+        // Check if we're using real API key
+        const isUsingRealAPI = WEATHER_API_KEY !== 'YOUR_API_KEY_HERE' && WEATHER_API_KEY.length > 10;
         
         // Debug logging
-        console.log('API Key configured:', isUsingRealAPI);
-        console.log('API Key length:', MET_OFFICE_API_KEY.length);
-        console.log('API Key starts with:', MET_OFFICE_API_KEY.substring(0, 8) + '...');
-        console.log('API Key type check:', typeof MET_OFFICE_API_KEY);
-        console.log('Key validation checks:', {
-            exists: !!MET_OFFICE_API_KEY,
-            longEnough: MET_OFFICE_API_KEY.length > 50,
-            notPlaceholder: MET_OFFICE_API_KEY !== 'YOUR_API_KEY_HERE',
-            noPlaceholderText: !MET_OFFICE_API_KEY.includes('YOUR_API_KEY')
-        });
+        console.log('Weather API Key configured:', isUsingRealAPI);
+        console.log('Weather API Key length:', WEATHER_API_KEY.length);
+        if (isUsingRealAPI) {
+            console.log('✅ Ready to use OpenWeatherMap API');
+        } else {
+            console.log('ℹ️ Using demo data - add OpenWeatherMap API key for real forecasts');
+        }
 
         // ========================================
         // DEMO DATA (fallback)
@@ -529,80 +523,46 @@
         }
 
         // ========================================
-        // MET OFFICE API FUNCTIONS
+        // OPENWEATHERMAP API FUNCTIONS
         // ========================================
-        async function fetchMetOfficeHourlyData(lat, lon) {
-            console.log('Attempting to fetch Met Office data...');
-            console.log('Using real API:', isUsingRealAPI);
-            
+        async function fetchOpenWeatherData(lat, lon) {
             if (!isUsingRealAPI) {
-                console.log('Using demo data - real API key not configured');
+                console.log('Using demo data - OpenWeatherMap API key not configured');
                 return null;
             }
 
             try {
-                const apiUrl = `${MET_OFFICE_BASE_URL}${HOURLY_SPOT_ENDPOINT}?` + 
-                    `latitude=${lat}&longitude=${lon}&` +
-                    `includeLocationName=true`;
-                
-                const url = `${CORS_PROXY}${encodeURIComponent(apiUrl)}`;
+                // Fetch current weather
+                const currentUrl = `${OPENWEATHER_BASE_URL}${CURRENT_WEATHER_ENDPOINT}?` +
+                    `lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
 
-                console.log('Fetching from URL (via proxy):', url);
+                // Fetch 5-day forecast
+                const forecastUrl = `${OPENWEATHER_BASE_URL}${FORECAST_ENDPOINT}?` +
+                    `lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
 
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'X-IBM-Client-Id': MET_OFFICE_API_KEY,
-                        'accept': 'application/json'
-                    }
-                });
+                console.log('Fetching OpenWeatherMap data...');
 
-                console.log('Response status:', response.status);
-                console.log('Response headers:', [...response.headers.entries()]);
+                const [currentResponse, forecastResponse] = await Promise.all([
+                    fetch(currentUrl),
+                    fetch(forecastUrl)
+                ]);
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('API Error Response:', errorText);
-                    throw new Error(`Met Office API error: ${response.status} ${response.statusText} - ${errorText}`);
+                if (!currentResponse.ok) {
+                    throw new Error(`OpenWeatherMap current weather error: ${currentResponse.status}`);
                 }
 
-                const data = await response.json();
-                console.log('Successfully fetched Met Office data:', data);
-                return data;
-            } catch (error) {
-                console.error('Error fetching Met Office data:', error);
-                return null;
-            }
-        }
-
-        async function fetchMetOfficeThreeHourlyData(lat, lon) {
-            if (!isUsingRealAPI) {
-                return null;
-            }
-
-            try {
-                const apiUrl = `${MET_OFFICE_BASE_URL}${THREE_HOURLY_SPOT_ENDPOINT}?` + 
-                    `latitude=${lat}&longitude=${lon}&` +
-                    `includeLocationName=true`;
-                
-                const url = `${CORS_PROXY}${encodeURIComponent(apiUrl)}`;
-
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'X-IBM-Client-Id': MET_OFFICE_API_KEY,
-                        'accept': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Met Office API error: ${response.status}`);
+                if (!forecastResponse.ok) {
+                    throw new Error(`OpenWeatherMap forecast error: ${forecastResponse.status}`);
                 }
 
-                const data = await response.json();
-                return data;
+                const currentData = await currentResponse.json();
+                const forecastData = await forecastResponse.json();
+
+                console.log('✅ Successfully fetched OpenWeatherMap data');
+                return { current: currentData, forecast: forecastData };
+
             } catch (error) {
-                console.error('Error fetching Met Office 3-hourly data:', error);
+                console.error('Error fetching OpenWeatherMap data:', error);
                 return null;
             }
         }
@@ -610,31 +570,28 @@
         // ========================================
         // DATA PROCESSING FUNCTIONS
         // ========================================
-        function processMetOfficeData(hourlyData, threeHourlyData) {
-            if (!hourlyData || !hourlyData.features || !hourlyData.features[0]) {
+        function processOpenWeatherData(weatherData) {
+            if (!weatherData || !weatherData.current || !weatherData.forecast) {
                 return null;
             }
 
-            const feature = hourlyData.features[0];
-            const timeSeries = feature.properties.timeSeries;
-            
-            if (!timeSeries || timeSeries.length === 0) {
-                return null;
-            }
+            const current = weatherData.current;
+            const forecastList = weatherData.forecast.list;
 
-            const current = timeSeries[0];
+            // Process current conditions
             const currentConditions = {
-                temp: Math.round(current.screenTemperature || 15),
-                humidity: Math.round(current.screenRelativeHumidity || 65),
-                windSpeed: Math.round((current.windSpeed10m || 12) * 3.6),
-                description: getWeatherDescription(current)
+                temp: Math.round(current.main.temp),
+                humidity: current.main.humidity,
+                windSpeed: Math.round(current.wind.speed * 3.6), // Convert m/s to km/h
+                description: getWeatherDescriptionFromOpenWeather(current.weather[0])
             };
 
-            const forecastData = [];
+            // Group forecast data by day
             const dailyGroups = {};
+            const now = new Date();
             
-            timeSeries.forEach((entry, index) => {
-                const date = new Date(entry.time);
+            forecastList.forEach((item, index) => {
+                const date = new Date(item.dt * 1000);
                 const dateKey = date.toDateString();
                 
                 if (!dailyGroups[dateKey]) {
@@ -643,20 +600,24 @@
                 
                 dailyGroups[dateKey].push({
                     time: date.getHours().toString().padStart(2, '0') + ':00',
-                    temp: Math.round(entry.screenTemperature || 15),
-                    humidity: Math.round(entry.screenRelativeHumidity || 65),
-                    windSpeed: Math.round((entry.windSpeed10m || 12) * 3.6),
-                    precipitation: Math.round((entry.probOfPrecipitation || 0) * 100)
+                    temp: Math.round(item.main.temp),
+                    humidity: item.main.humidity,
+                    windSpeed: Math.round(item.wind.speed * 3.6),
+                    precipitation: Math.round((item.pop || 0) * 100) // Probability of precipitation
                 });
             });
 
+            // Create daily forecast summaries
+            const forecastData = [];
             const dateKeys = Object.keys(dailyGroups);
+            
             dateKeys.forEach((dateKey, index) => {
                 const dayData = dailyGroups[dateKey];
                 const dayName = index === 0 ? 'Today' : 
                                index === 1 ? 'Tomorrow' : 
                                `Day ${index + 1}`;
 
+                // Calculate daily averages
                 const avgTemp = Math.round(dayData.reduce((sum, h) => sum + h.temp, 0) / dayData.length);
                 const avgHumidity = Math.round(dayData.reduce((sum, h) => sum + h.humidity, 0) / dayData.length);
                 const avgWind = Math.round(dayData.reduce((sum, h) => sum + h.windSpeed, 0) / dayData.length);
@@ -675,8 +636,9 @@
                     })
                 };
 
+                // Add hourly data for today
                 if (index === 0) {
-                    dayForecast.hourly = dayData.slice(0, 8);
+                    dayForecast.hourly = dayData.slice(0, 8); // Next 8 hours
                 }
 
                 forecastData.push(dayForecast);
@@ -684,8 +646,28 @@
 
             return {
                 current: currentConditions,
-                forecast: forecastData.slice(0, 5)
+                forecast: forecastData.slice(0, 5) // 5-day forecast
             };
+        }
+
+        function getWeatherDescriptionFromOpenWeather(weather) {
+            const main = weather.main.toLowerCase();
+            const description = weather.description.toLowerCase();
+            
+            if (main.includes('rain') || description.includes('rain')) {
+                if (description.includes('light')) return 'light rain';
+                if (description.includes('heavy')) return 'heavy rain';
+                return 'rainy';
+            }
+            
+            if (main.includes('cloud')) {
+                if (description.includes('few') || description.includes('scattered')) return 'partly cloudy';
+                return 'overcast';
+            }
+            
+            if (main.includes('clear') || main.includes('sun')) return 'sunny';
+            
+            return 'partly cloudy';
         }
 
         function getWeatherDescription(data) {
