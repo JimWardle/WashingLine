@@ -211,7 +211,7 @@ button:disabled {
 
 .best-choice {
     background: #f6ffed;
-    color: #389e0d;
+    color: #6b9b7f;
     border: 1px solid #b7eb8f;
 }
 
@@ -290,7 +290,7 @@ button:disabled {
 
 .safe-yes {
     background: rgba(82, 196, 26, 0.2);
-    color: #389e0d;
+    color: #6b9b7f;
     border: 1px solid #b7eb8f;
 }
 
@@ -477,7 +477,7 @@ button:disabled {
 }
 
 .weather-details summary:hover {
-    color: #389e0d;
+    color: #6b9b7f;
 }
 
 .detail-grid {
@@ -532,7 +532,7 @@ button:disabled {
 }
 
 .tips h3 {
-    color: #389e0d;
+    color: #6b9b7f;
     margin-bottom: 10px;
 }
 
