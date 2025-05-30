@@ -21,15 +21,28 @@ body {
     backdrop-filter: blur(10px);
 }
 
-h1 {
+.header {
     text-align: center;
-    color: #333;
     margin-bottom: 30px;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 8px;
     font-size: 2.5em;
     background: linear-gradient(45deg, #2d5a27, #4a7c59);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+.tagline {
+    font-size: 1.1em;
+    color: #6b9b7f;
+    font-style: italic;
+    font-weight: 500;
+    margin: 0;
+    opacity: 0.9;
 }
 
 .location-input {
@@ -210,9 +223,9 @@ button:disabled {
 }
 
 .best-choice {
-    background: #f6ffed;
+    background: #f8faf9;
     color: #6b9b7f;
-    border: 1px solid #b7eb8f;
+    border: 1px solid #8db4a0;
 }
 
 .good-choice {
@@ -289,9 +302,9 @@ button:disabled {
 }
 
 .safe-yes {
-    background: rgba(82, 196, 26, 0.2);
+    background: rgba(107, 155, 127, 0.2);
     color: #6b9b7f;
-    border: 1px solid #b7eb8f;
+    border: 1px solid #8db4a0;
 }
 
 .safe-partial {
@@ -477,7 +490,7 @@ button:disabled {
 }
 
 .weather-details summary:hover {
-    color: #6b9b7f;
+    color: #8db4a0;
 }
 
 .detail-grid {
@@ -524,7 +537,7 @@ button:disabled {
 }
 
 .tips {
-    background: #f6ffed;
+    background: #f8faf9;
     border-left: 4px solid #6b9b7f;
     padding: 20px;
     border-radius: 10px;
