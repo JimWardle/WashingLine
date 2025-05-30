@@ -1031,7 +1031,7 @@
                 }
                 
                 html += '<div class="forecast-grid">';
-                weatherData.forecast.forEach(day => {
+                processedData.forecast.forEach(day => {
                     const score = calculateWashingScore(day.temp, day.humidity, day.windSpeed, day.precipitation);
                     const scoreInfo = getScoreCategory(score);
                     const icon = getWeatherIcon(day.description);
