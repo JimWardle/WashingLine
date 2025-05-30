@@ -433,8 +433,8 @@ button:disabled {
     font-size: 0.9em;
     padding: 4px 8px;
     border-radius: 8px;
-    background: rgba(82, 196, 26, 0.1);
-    color: #389e0d;
+    background: rgba(107, 155, 127, 0.1);
+    color: #6b9b7f;
 }
 
 .key-info {
@@ -504,22 +504,22 @@ button:disabled {
 }
 
 .score-excellent {
-    background: #52c41a;
+    background: #6b9b7f;
     color: white;
 }
 
 .score-good {
-    background: #faad14;
+    background: #8db4a0;
     color: white;
 }
 
 .score-fair {
-    background: #fa8c16;
+    background: #d4927b;
     color: white;
 }
 
 .score-poor {
-    background: #f5222d;
+    background: #c7856f;
     color: white;
 }
 
