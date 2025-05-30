@@ -219,6 +219,17 @@ button:disabled {
     color: white;
 }
 
+.rec-hang-time {
+    font-size: 1em;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px 10px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
 .rec-verdict {
     font-size: 0.95em;
     margin-bottom: 6px;

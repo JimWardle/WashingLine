@@ -507,6 +507,7 @@ function findBestTimes(forecast, fabricType = 'cotton') {
                 bestTimes.push({
                     time: `Today ${hour.time}`,
                     score: score,
+                    temp: hour.temp,
                     conditions: `${hour.temp}°C, ${hour.humidity}% humidity, ${getWindVisualization(hour.windSpeed)}`,
                     dryingTime: dryingTime,
                     safeTime: safeTime,
@@ -525,6 +526,7 @@ function findBestTimes(forecast, fabricType = 'cotton') {
             bestTimes.push({
                 time: day.date,
                 score: score,
+                temp: day.temp,
                 conditions: `${day.temp}°C, ${day.humidity}% humidity, ${getWindVisualization(day.windSpeed)}`,
                 dryingTime: dryingTime,
                 safeTime: safeTime,
@@ -635,12 +637,25 @@ async function getWeatherForecast() {
                 const urgency = isToday ? 'today-item' : 'future-item';
                 const badge = isVeryBest ? 'best-choice' : 'good-choice';
                 
+                // Calculate suggested hang-out time
+                let hangTime = '';
+                if (isToday && time.time.includes(':')) {
+                    hangTime = `Hang out now (${time.time.split(' ')[1]})`;
+                } else if (isToday) {
+                    hangTime = 'Hang out anytime today';
+                } else {
+                    hangTime = 'Hang out after 9am';
+                }
+                
                 html += `
                     <div class="recommendation ${urgency}">
                         <div class="rec-header">
                             <span class="rec-emoji">${emoji}</span>
                             <span class="rec-time">${time.time}</span>
                             <span class="rec-badge ${badge}">${isVeryBest ? 'BEST' : 'GOOD'}</span>
+                        </div>
+                        <div class="rec-hang-time">
+                            🧺 ${hangTime}
                         </div>
                         <div class="rec-verdict">
                             ${time.canFullyDry ? 
