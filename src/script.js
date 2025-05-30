@@ -223,9 +223,10 @@ function processOpenWeatherData(weatherData) {
     
     dateKeys.forEach((dateKey, index) => {
         const dayData = dailyGroups[dateKey];
+        const date = new Date(dateKey);
         const dayName = index === 0 ? 'Today' : 
                        index === 1 ? 'Tomorrow' : 
-                       `Day ${index + 1}`;
+                       date.toLocaleDateString('en-GB', { weekday: 'long' });
 
         // Calculate daily averages
         const avgTemp = Math.round(dayData.reduce((sum, h) => sum + h.temp, 0) / dayData.length);
@@ -435,6 +436,19 @@ function getWeatherIcon(description) {
         'heavy rain': '⛈️'
     };
     return icons[description] || '🌤️';
+}
+
+function getWeatherEmoji(description, score) {
+    // Enhanced visual feedback based on washing conditions
+    if (score >= 80) {
+        return description === 'sunny' ? '☀️💯' : '⛅💯';
+    } else if (score >= 60) {
+        return description === 'sunny' ? '☀️✨' : '⛅👍';
+    } else if (score >= 40) {
+        return description.includes('rain') ? '🌧️⚠️' : '☁️🤔';
+    } else {
+        return description.includes('rain') ? '🌧️❌' : '☁️👎';
+    }
 }
 
 function getWindVisualization(windSpeed) {
@@ -650,7 +664,7 @@ async function getWeatherForecast() {
         processedData.forecast.forEach(day => {
             const score = calculateWashingScore(day.temp, day.humidity, day.windSpeed, day.precipitation);
             const scoreInfo = getScoreCategory(score);
-            const icon = getWeatherIcon(day.description);
+            const icon = getWeatherEmoji(day.description, score);
             const dryingTime = calculateDryingTime(day.temp, day.humidity, day.windSpeed, fabricType);
             const safeTime = getSafeOutdoorTime([day], 9);
             
@@ -658,23 +672,40 @@ async function getWeatherForecast() {
                 <div class="day-card">
                     <div class="day-header">
                         <h3>${day.date}</h3>
-                        <span class="washing-score score-${scoreInfo.category}">${score}/100</span>
+                        <span class="washing-score score-${scoreInfo.category}">${scoreInfo.label}</span>
                     </div>
-                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                        <span class="weather-icon">${icon}</span>
-                        <div>
-                            <div style="font-weight: bold;">${day.temp}°C</div>
-                            <div style="text-transform: capitalize; color: #666;">${day.description}</div>
+                    <div class="weather-summary">
+                        <span class="weather-icon-large">${icon}</span>
+                        <div class="weather-main">
+                            <div class="temperature">${day.temp}°C</div>
+                            <div class="description">${day.description}</div>
+                            <div class="washing-verdict">
+                                ${score >= 80 ? '🧺 Perfect for washing!' : 
+                                  score >= 60 ? '👕 Good washing day' : 
+                                  score >= 40 ? '⚠️ Fair conditions' : 
+                                  '❌ Poor drying weather'}
+                            </div>
                         </div>
                     </div>
-                    <div class="weather-details">
-                        <div class="detail-item">💧 ${day.humidity}% humidity</div>
-                        <div class="detail-item">${getWindVisualization(day.windSpeed)}</div>
-                        <div class="detail-item">🌧️ ${day.precipitation}% rain</div>
-                        <div class="detail-item">👕 ${scoreInfo.label} for drying</div>
-                        <div class="detail-item">🕐 ${formatDryingTime(dryingTime)} to dry</div>
-                        <div class="detail-item">☔ ${formatDryingTime(safeTime)} safe outside</div>
+                    <div class="key-info">
+                        <div class="info-item">
+                            <span class="info-icon">🕐</span>
+                            <span class="info-text">Dries in ${formatDryingTime(dryingTime)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">☔</span>
+                            <span class="info-text">Safe for ${formatDryingTime(safeTime)}</span>
+                        </div>
                     </div>
+                    <details class="weather-details">
+                        <summary>Show detailed conditions</summary>
+                        <div class="detail-grid">
+                            <div class="detail-item">💧 ${day.humidity}% humidity</div>
+                            <div class="detail-item">${getWindVisualization(day.windSpeed)}</div>
+                            <div class="detail-item">🌧️ ${day.precipitation}% rain chance</div>
+                            <div class="detail-item">📊 ${score}/100 washing score</div>
+                        </div>
+                    </details>
                 </div>
             `;
         });
