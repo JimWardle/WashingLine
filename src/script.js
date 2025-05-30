@@ -5,10 +5,10 @@
 const WEATHER_API_KEY = 'YOUR_API_KEY_HERE';
 
 // OpenWeatherMap API endpoints
-const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org';
 const GEOCODING_ENDPOINT = '/geo/1.0/direct';
-const CURRENT_WEATHER_ENDPOINT = '/weather';
-const FORECAST_ENDPOINT = '/forecast';
+const CURRENT_WEATHER_ENDPOINT = '/data/2.5/weather';
+const FORECAST_ENDPOINT = '/data/2.5/forecast';
 
 // Check if we're using real API key
 // If it's 32 characters and starts with alphanumeric, it's likely a real OpenWeatherMap key
@@ -105,6 +105,7 @@ async function getCoordinatesFromLocation(locationName) {
             `q=${encodeURIComponent(locationName)}&limit=1&appid=${WEATHER_API_KEY}`;
         
         console.log('Fetching coordinates for:', locationName);
+        console.log('Geocoding URL:', geocodingUrl);
         
         const response = await fetch(geocodingUrl);
         
