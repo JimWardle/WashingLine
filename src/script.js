@@ -623,28 +623,32 @@ async function getWeatherForecast() {
             
             html += `
                 <div class="best-times">
-                    <h2>🎯 Best Times to Hang Washing</h2>
-                    <p>Optimal times for ${fabricText} in <strong>${location}</strong>:</p>
-                    <div class="time-slots">
+                    <h2>🎯 When to Hang Your Washing</h2>
+                    <p>Best times for ${fabricText} in <strong>${location}</strong>:</p>
+                    <div class="time-recommendations">
             `;
             
-            bestTimes.forEach(time => {
-                const scoreInfo = getScoreCategory(time.score);
-                const safeIndicator = time.canFullyDry ? 
-                    `<span class="safe-indicator safe-yes">✓ Will dry completely</span>` :
-                    `<span class="safe-indicator safe-partial">⚠ May need bringing in</span>`;
+            bestTimes.forEach((time, index) => {
+                const isToday = time.time.includes('Today');
+                const isVeryBest = index === 0;
+                const emoji = isVeryBest ? '🌟' : isToday ? '⏰' : '📅';
+                const urgency = isToday ? 'today-item' : 'future-item';
+                const badge = isVeryBest ? 'best-choice' : 'good-choice';
                 
                 html += `
-                    <div class="time-slot ${scoreInfo.category}">
-                        <h3>${time.time}</h3>
-                        <div class="washing-score score-${scoreInfo.category}">${scoreInfo.label} (${time.score}/100)</div>
-                        <p>${time.conditions}</p>
-                        <div class="time-info">
-                            <div><strong>🕐 Drying time:</strong> ${formatDryingTime(time.dryingTime)}</div>
-                            <div><strong>☔ Safe outside:</strong> ${formatDryingTime(time.safeTime)}</div>
-                            <div class="drying-estimate">
-                                ${safeIndicator}
-                            </div>
+                    <div class="recommendation ${urgency}">
+                        <div class="rec-header">
+                            <span class="rec-emoji">${emoji}</span>
+                            <span class="rec-time">${time.time}</span>
+                            <span class="rec-badge ${badge}">${isVeryBest ? 'BEST' : 'GOOD'}</span>
+                        </div>
+                        <div class="rec-verdict">
+                            ${time.canFullyDry ? 
+                                '✅ Will dry completely before any rain' : 
+                                '⚠️ May need bringing in if weather changes'}
+                        </div>
+                        <div class="rec-summary">
+                            ${time.temp}°C • ${formatDryingTime(time.dryingTime)} drying time
                         </div>
                     </div>
                 `;
@@ -653,9 +657,14 @@ async function getWeatherForecast() {
             html += '</div></div>';
         } else {
             html += `
-                <div class="best-times" style="background: linear-gradient(135deg, #e17055, #fd79a8);">
-                    <h2>⚠️ Poor Washing Conditions</h2>
-                    <p>Weather conditions aren't ideal for outdoor drying in <strong>${location}</strong> over the next few days. Consider indoor alternatives.</p>
+                <div class="best-times poor-conditions">
+                    <h2>⚠️ Not Great for Washing</h2>
+                    <p>Weather in <strong>${location}</strong> isn't ideal for outdoor drying over the next few days.</p>
+                    <div class="poor-advice">
+                        <div class="advice-item">🏠 Consider indoor drying</div>
+                        <div class="advice-item">⏳ Wait for better conditions</div>
+                        <div class="advice-item">🌡️ Use a heated drying rack</div>
+                    </div>
                 </div>
             `;
         }
