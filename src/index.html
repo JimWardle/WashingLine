@@ -447,9 +447,10 @@
         const HOURLY_SPOT_ENDPOINT = '/sitespecific/v0/point/hourly';
         const THREE_HOURLY_SPOT_ENDPOINT = '/sitespecific/v0/point/three-hourly';
 
-        // Check if we're using real API key
-        const isUsingRealAPI = MET_OFFICE_API_KEY !== 'YOUR_API_KEY_HERE' && 
-                              MET_OFFICE_API_KEY.length > 10 && 
+        // Check if we're using real API key - updated logic
+        const isUsingRealAPI = MET_OFFICE_API_KEY && 
+                              MET_OFFICE_API_KEY.length > 50 && 
+                              MET_OFFICE_API_KEY !== 'YOUR_API_KEY_HERE' &&
                               !MET_OFFICE_API_KEY.includes('YOUR_API_KEY');
         
         // Debug logging
@@ -457,6 +458,12 @@
         console.log('API Key length:', MET_OFFICE_API_KEY.length);
         console.log('API Key starts with:', MET_OFFICE_API_KEY.substring(0, 8) + '...');
         console.log('API Key type check:', typeof MET_OFFICE_API_KEY);
+        console.log('Key validation checks:', {
+            exists: !!MET_OFFICE_API_KEY,
+            longEnough: MET_OFFICE_API_KEY.length > 50,
+            notPlaceholder: MET_OFFICE_API_KEY !== 'YOUR_API_KEY_HERE',
+            noPlaceholderText: !MET_OFFICE_API_KEY.includes('YOUR_API_KEY')
+        });
 
         // ========================================
         // DEMO DATA (fallback)
