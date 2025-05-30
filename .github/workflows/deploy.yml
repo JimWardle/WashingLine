@@ -41,7 +41,7 @@ jobs:
           MET_OFFICE_API_KEY: ${{ secrets.MET_OFFICE_API_KEY }}
         run: |
           # Replace API key placeholder in the HTML file
-          sed "s/YOUR_API_KEY_HERE/$MET_OFFICE_API_KEY/g" src/index.html > index.html
+          sed "s/YOUR_API_KEY_HERE/${{ secrets.WEATHER_API_KEY }}/g" src/index.html > index.html
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
