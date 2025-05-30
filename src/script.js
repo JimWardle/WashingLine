@@ -535,7 +535,17 @@ function findBestTimes(forecast, fabricType = 'cotton') {
         }
     });
     
-    return bestTimes.sort((a, b) => b.score - a.score).slice(0, 3);
+    return bestTimes.sort((a, b) => {
+        // Always put "Today" items first
+        const aIsToday = a.time.includes('Today');
+        const bIsToday = b.time.includes('Today');
+        
+        if (aIsToday && !bIsToday) return -1;
+        if (!aIsToday && bIsToday) return 1;
+        
+        // Then sort by score within each group
+        return b.score - a.score;
+    }).slice(0, 3);
 }
 
 function getWashingTips(forecast) {
@@ -632,10 +642,16 @@ async function getWeatherForecast() {
             
             bestTimes.forEach((time, index) => {
                 const isToday = time.time.includes('Today');
-                const isVeryBest = index === 0;
-                const emoji = isVeryBest ? '🌟' : isToday ? '⏰' : '📅';
+                const isFirstToday = isToday && index === 0;
+                
+                // Find the actual best score among all times
+                const bestOverallScore = Math.max(...bestTimes.map(t => t.score));
+                const isBestOverall = time.score === bestOverallScore;
+                
+                const emoji = isFirstToday ? '⏰' : isBestOverall ? '🌟' : '📅';
                 const urgency = isToday ? 'today-item' : 'future-item';
-                const badge = isVeryBest ? 'best-choice' : 'good-choice';
+                const badge = isBestOverall ? 'best-choice' : 'good-choice';
+                const badgeText = isBestOverall ? 'BEST' : isToday ? 'TODAY' : 'GOOD';
                 
                 // Calculate suggested hang-out time
                 let hangTime = '';
@@ -652,7 +668,7 @@ async function getWeatherForecast() {
                         <div class="rec-header">
                             <span class="rec-emoji">${emoji}</span>
                             <span class="rec-time">${time.time}</span>
-                            <span class="rec-badge ${badge}">${isVeryBest ? 'BEST' : 'GOOD'}</span>
+                            <span class="rec-badge ${badge}">${badgeText}</span>
                         </div>
                         <div class="rec-hang-time">
                             🧺 ${hangTime}

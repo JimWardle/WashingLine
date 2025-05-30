@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #a8e6cf 0%, #7fcdcd 50%, #88d8c0 100%);
     min-height: 100vh;
     padding: 20px;
 }
@@ -26,7 +26,7 @@ h1 {
     color: #333;
     margin-bottom: 30px;
     font-size: 2.5em;
-    background: linear-gradient(45deg, #667eea, #764ba2);
+    background: linear-gradient(45deg, #2d5a27, #4a7c59);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -49,12 +49,12 @@ input[type="text"] {
 }
 
 input[type="text"]:focus {
-    border-color: #667eea;
+    border-color: #4a7c59;
 }
 
 button {
     padding: 15px 25px;
-    background: linear-gradient(45deg, #667eea, #764ba2);
+    background: linear-gradient(45deg, #4a7c59, #2d5a27);
     color: white;
     border: none;
     border-radius: 10px;
@@ -66,7 +66,7 @@ button {
 
 button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 10px 20px rgba(74, 124, 89, 0.3);
 }
 
 button:disabled {
@@ -105,15 +105,15 @@ button:disabled {
 }
 
 .api-live {
-    background: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
+    background: #d1f2eb;
+    border: 1px solid #a3e4d7;
+    color: #0d5c45;
 }
 
 .api-demo {
-    background: #fff3cd;
-    border: 1px solid #ffeaa7;
-    color: #856404;
+    background: #fef9e7;
+    border: 1px solid #f7dc6f;
+    color: #7d6608;
 }
 
 .loading {
@@ -137,7 +137,7 @@ button:disabled {
 }
 
 .best-times {
-    background: linear-gradient(135deg, #00b894, #00cec9);
+    background: linear-gradient(135deg, #52c41a, #73d13d);
     color: white;
     padding: 25px;
     border-radius: 15px;
@@ -146,7 +146,7 @@ button:disabled {
 }
 
 .best-times.poor-conditions {
-    background: linear-gradient(135deg, #e17055, #fd79a8);
+    background: linear-gradient(135deg, #d4927b, #c7856f);
 }
 
 .best-times h2 {
@@ -210,13 +210,20 @@ button:disabled {
 }
 
 .best-choice {
-    background: #ffd700;
-    color: #333;
+    background: #f6ffed;
+    color: #389e0d;
+    border: 1px solid #b7eb8f;
 }
 
 .good-choice {
     background: rgba(255, 255, 255, 0.3);
     color: white;
+}
+
+.today-choice {
+    background: #fff2e8;
+    color: #d4380d;
+    border: 1px solid #ffbb96;
 }
 
 .rec-hang-time {
@@ -282,15 +289,15 @@ button:disabled {
 }
 
 .safe-yes {
-    background: rgba(0, 184, 148, 0.2);
-    color: #00b894;
-    border: 1px solid #00b894;
+    background: rgba(82, 196, 26, 0.2);
+    color: #389e0d;
+    border: 1px solid #b7eb8f;
 }
 
 .safe-partial {
-    background: rgba(253, 203, 110, 0.2);
-    color: #e17055;
-    border: 1px solid #fdcb6e;
+    background: rgba(250, 173, 20, 0.2);
+    color: #d46b08;
+    border: 1px solid #ffd591;
 }
 
 .wind-indicator {
@@ -426,8 +433,8 @@ button:disabled {
     font-size: 0.9em;
     padding: 4px 8px;
     border-radius: 8px;
-    background: rgba(102, 126, 234, 0.1);
-    color: #667eea;
+    background: rgba(82, 196, 26, 0.1);
+    color: #389e0d;
 }
 
 .key-info {
@@ -464,13 +471,13 @@ button:disabled {
     cursor: pointer;
     padding: 5px 0;
     font-weight: 600;
-    color: #667eea;
+    color: #52c41a;
     font-size: 0.9em;
     user-select: none;
 }
 
 .weather-details summary:hover {
-    color: #5a67d8;
+    color: #389e0d;
 }
 
 .detail-grid {
@@ -497,35 +504,35 @@ button:disabled {
 }
 
 .score-excellent {
-    background: #00b894;
+    background: #52c41a;
     color: white;
 }
 
 .score-good {
-    background: #fdcb6e;
-    color: #2d3436;
+    background: #faad14;
+    color: white;
 }
 
 .score-fair {
-    background: #fd79a8;
+    background: #fa8c16;
     color: white;
 }
 
 .score-poor {
-    background: #e17055;
+    background: #f5222d;
     color: white;
 }
 
 .tips {
-    background: #e3f2fd;
-    border-left: 4px solid #2196f3;
+    background: #f6ffed;
+    border-left: 4px solid #52c41a;
     padding: 20px;
     border-radius: 10px;
     margin-top: 20px;
 }
 
 .tips h3 {
-    color: #1976d2;
+    color: #389e0d;
     margin-bottom: 10px;
 }
 
