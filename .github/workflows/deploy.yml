@@ -38,10 +38,13 @@ jobs:
         
       - name: Build site
         env:
-          MET_OFFICE_API_KEY: ${{ secrets.MET_OFFICE_API_KEY }}
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: |
-          # Replace API key placeholder in the HTML file
-          sed "s/YOUR_API_KEY_HERE/${{ secrets.WEATHER_API_KEY }}/g" src/index.html > index.html
+          # Replace API key in JavaScript file
+          sed "s/YOUR_API_KEY_HERE/$WEATHER_API_KEY/g" src/script.js > script.js
+          # Copy other files
+          cp src/index.html index.html
+          cp src/styles.css styles.css
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
