@@ -471,7 +471,7 @@ button:disabled {
     cursor: pointer;
     padding: 5px 0;
     font-weight: 600;
-    color: #52c41a;
+    color: #6b9b7f;
     font-size: 0.9em;
     user-select: none;
 }
@@ -525,7 +525,7 @@ button:disabled {
 
 .tips {
     background: #f6ffed;
-    border-left: 4px solid #52c41a;
+    border-left: 4px solid #6b9b7f;
     padding: 20px;
     border-radius: 10px;
     margin-top: 20px;
