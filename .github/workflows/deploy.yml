@@ -40,11 +40,11 @@ jobs:
         env:
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: |
-          # Replace API key in JavaScript file
-          sed "s/YOUR_API_KEY_HERE/$WEATHER_API_KEY/g" src/script.js > script.js
-          # Copy other files
-          cp src/index.html index.html
-          cp src/styles.css styles.css
+         # Replace API key in JavaScript file
+         sed "s/YOUR_API_KEY_HERE/$WEATHER_API_KEY/g" src/script.js > script.js
+         # Copy other files
+         cp src/index.html index.html
+         cp src/styles.css styles.css
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

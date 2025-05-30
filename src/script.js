@@ -10,7 +10,8 @@ const CURRENT_WEATHER_ENDPOINT = '/weather';
 const FORECAST_ENDPOINT = '/forecast';
 
 // Check if we're using real API key
-const isUsingRealAPI = WEATHER_API_KEY !== 'YOUR_API_KEY_HERE' && WEATHER_API_KEY.length > 10;
+// TEMPORARY FIX - Force API to work if key is 32 characters (OpenWeatherMap format)
+const isUsingRealAPI = (WEATHER_API_KEY !== 'YOUR_API_KEY_HERE' && WEATHER_API_KEY.length > 10) || WEATHER_API_KEY.length === 32;
 
 // Debug logging
 console.log('Weather API Key configured:', isUsingRealAPI);
