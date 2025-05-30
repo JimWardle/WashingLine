@@ -73,6 +73,14 @@ jobs:
             exit 1
           fi
           
+          # Copy img folder if it exists
+          if [ -d "src/img" ]; then
+            echo "📁 Copying img folder..."
+            cp -r src/img build/img
+          else
+            echo "⚠️ src/img folder not found - skipping image assets"
+          fi
+          
           # Verify the API key was injected (without exposing the key)
           if grep -q "YOUR_API_KEY_HERE" build/script.js; then
             echo "⚠️  API key not injected - will use demo data"
