@@ -35,18 +35,43 @@ jobs:
           # Create build directory
           mkdir -p build
           
-          # Replace API key in JavaScript file and copy to build
-          if [ -n "$WEATHER_API_KEY" ]; then
-            echo "Injecting OpenWeatherMap API key..."
-            sed "s/YOUR_API_KEY_HERE/$WEATHER_API_KEY/g" script.js > build/script.js
+          # Debug: List files in current directory and src folder
+          echo "Files in repository root:"
+          ls -la
+          echo "Files in src folder:"
+          ls -la src/
+          
+          # Check for script.js file in src folder
+          if [ -f "src/script.js" ]; then
+            echo "Found src/script.js file"
+            # Replace API key in JavaScript file and copy to build
+            if [ -n "$WEATHER_API_KEY" ]; then
+              echo "Injecting OpenWeatherMap API key..."
+              sed "s/YOUR_API_KEY_HERE/$WEATHER_API_KEY/g" src/script.js > build/script.js
+            else
+              echo "No API key found - using demo mode"
+              cp src/script.js build/script.js
+            fi
           else
-            echo "No API key found - using demo mode"
-            cp script.js build/script.js
+            echo "❌ src/script.js not found! Available files:"
+            find . -name "*.js" -type f
+            exit 1
           fi
           
-          # Copy other files to build directory
-          cp index.html build/index.html
-          cp styles.css build/styles.css
+          # Copy other files from src to build directory
+          if [ -f "src/index.html" ]; then
+            cp src/index.html build/index.html
+          else
+            echo "❌ src/index.html not found!"
+            exit 1
+          fi
+          
+          if [ -f "src/styles.css" ]; then
+            cp src/styles.css build/styles.css
+          else
+            echo "❌ src/styles.css not found!"
+            exit 1
+          fi
           
           # Verify the API key was injected (without exposing the key)
           if grep -q "YOUR_API_KEY_HERE" build/script.js; then
