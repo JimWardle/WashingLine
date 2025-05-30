@@ -25,31 +25,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          
       - name: Setup Pages
         uses: actions/configure-pages@v4
-        
-      - name: Install dependencies
-        run: npm install
         
       - name: Build site
         env:
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: |
-         # Replace API key in JavaScript file
-         sed "s/YOUR_API_KEY_HERE/$WEATHER_API_KEY/g" src/script.js > script.js
-         # Copy other files
-         cp src/index.html index.html
-         cp src/styles.css styles.css
+          # Create build directory
+          mkdir -p build
+          
+          # Replace API key in JavaScript file and copy to build
+          if [ -n "$WEATHER_API_KEY" ]; then
+            echo "Injecting OpenWeatherMap API key..."
+            sed "s/YOUR_API_KEY_HERE/$WEATHER_API_KEY/g" script.js > build/script.js
+          else
+            echo "No API key found - using demo mode"
+            cp script.js build/script.js
+          fi
+          
+          # Copy other files to build directory
+          cp index.html build/index.html
+          cp styles.css build/styles.css
+          
+          # Verify the API key was injected (without exposing the key)
+          if grep -q "YOUR_API_KEY_HERE" build/script.js; then
+            echo "⚠️  API key not injected - will use demo data"
+          else
+            echo "✅ API key injected successfully - will use live OpenWeatherMap data"
+          fi
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: './build'
 
   # Deployment job
   deploy:

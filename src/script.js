@@ -6,12 +6,12 @@ const WEATHER_API_KEY = 'YOUR_API_KEY_HERE';
 
 // OpenWeatherMap API endpoints
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const GEOCODING_ENDPOINT = '/geo/1.0/direct';
 const CURRENT_WEATHER_ENDPOINT = '/weather';
 const FORECAST_ENDPOINT = '/forecast';
 
 // Check if we're using real API key
-// TEMPORARY FIX - Force API to work if key is 32 characters (OpenWeatherMap format)
-const isUsingRealAPI = (WEATHER_API_KEY !== 'YOUR_API_KEY_HERE' && WEATHER_API_KEY.length > 10) || WEATHER_API_KEY.length === 32;
+const isUsingRealAPI = WEATHER_API_KEY !== 'YOUR_API_KEY_HERE' && WEATHER_API_KEY.length >= 32;
 
 // Debug logging
 console.log('Weather API Key configured:', isUsingRealAPI);
@@ -25,64 +25,104 @@ if (isUsingRealAPI) {
 // ========================================
 // DEMO DATA (fallback)
 // ========================================
-const mockWeatherData = {
-    "Birmingham, UK": {
-        current: { temp: 15, humidity: 65, windSpeed: 12, description: "partly cloudy" },
+const generateMockWeatherData = (locationName) => {
+    // Generate different mock data based on location name for variety
+    const seed = locationName.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+    const random = (min, max) => Math.floor((seed * 9301 + 49297) % 233280 / 233280 * (max - min + 1)) + min;
+    
+    const baseTemp = random(12, 22);
+    const baseHumidity = random(45, 75);
+    const baseWind = random(8, 18);
+    
+    return {
+        current: { 
+            temp: baseTemp, 
+            humidity: baseHumidity, 
+            windSpeed: baseWind, 
+            description: "partly cloudy" 
+        },
         forecast: [
             { 
                 date: "Today", 
-                temp: 18, 
-                humidity: 60, 
-                windSpeed: 15, 
-                precipitation: 10, 
+                temp: baseTemp + random(-2, 3), 
+                humidity: baseHumidity + random(-10, 10), 
+                windSpeed: baseWind + random(-5, 8), 
+                precipitation: random(0, 20), 
                 description: "partly cloudy",
                 hourly: [
-                    { time: "09:00", temp: 16, humidity: 65, windSpeed: 12, precipitation: 5 },
-                    { time: "12:00", temp: 18, humidity: 55, windSpeed: 15, precipitation: 0 },
-                    { time: "15:00", temp: 19, humidity: 50, windSpeed: 18, precipitation: 0 },
-                    { time: "18:00", temp: 17, humidity: 60, windSpeed: 14, precipitation: 10 }
+                    { time: "09:00", temp: baseTemp - 2, humidity: baseHumidity + 5, windSpeed: baseWind - 3, precipitation: random(0, 10) },
+                    { time: "12:00", temp: baseTemp + 1, humidity: baseHumidity - 5, windSpeed: baseWind + 2, precipitation: random(0, 5) },
+                    { time: "15:00", temp: baseTemp + 3, humidity: baseHumidity - 8, windSpeed: baseWind + 5, precipitation: random(0, 5) },
+                    { time: "18:00", temp: baseTemp, humidity: baseHumidity, windSpeed: baseWind, precipitation: random(0, 15) }
                 ]
             },
-            { date: "Tomorrow", temp: 22, humidity: 45, windSpeed: 20, precipitation: 0, description: "sunny" },
-            { date: "Day 3", temp: 19, humidity: 70, windSpeed: 8, precipitation: 60, description: "rainy" },
-            { date: "Day 4", temp: 21, humidity: 55, windSpeed: 16, precipitation: 5, description: "partly cloudy" },
-            { date: "Day 5", temp: 24, humidity: 40, windSpeed: 22, precipitation: 0, description: "sunny" }
+            { date: "Tomorrow", temp: baseTemp + random(-3, 5), humidity: baseHumidity + random(-15, 15), windSpeed: baseWind + random(-5, 10), precipitation: random(0, 30), description: random(0, 1) ? "sunny" : "partly cloudy" },
+            { date: "Day 3", temp: baseTemp + random(-4, 4), humidity: baseHumidity + random(-10, 20), windSpeed: baseWind + random(-3, 7), precipitation: random(0, 60), description: random(0, 2) === 0 ? "sunny" : random(0, 1) ? "partly cloudy" : "rainy" },
+            { date: "Day 4", temp: baseTemp + random(-2, 6), humidity: baseHumidity + random(-5, 15), windSpeed: baseWind + random(-2, 8), precipitation: random(0, 25), description: "partly cloudy" },
+            { date: "Day 5", temp: baseTemp + random(-1, 7), humidity: baseHumidity + random(-20, 10), windSpeed: baseWind + random(0, 12), precipitation: random(0, 15), description: "sunny" }
         ]
-    },
-    "London, UK": {
-        current: { temp: 17, humidity: 70, windSpeed: 10, description: "overcast" },
-        forecast: [
-            { date: "Today", temp: 19, humidity: 65, windSpeed: 12, precipitation: 20, description: "overcast" },
-            { date: "Tomorrow", temp: 21, humidity: 50, windSpeed: 18, precipitation: 5, description: "partly cloudy" },
-            { date: "Day 3", temp: 23, humidity: 45, windSpeed: 25, precipitation: 0, description: "sunny" },
-            { date: "Day 4", temp: 18, humidity: 75, windSpeed: 8, precipitation: 80, description: "heavy rain" },
-            { date: "Day 5", temp: 20, humidity: 60, windSpeed: 15, precipitation: 10, description: "light rain" }
-        ]
-    }
+    };
 };
 
 // ========================================
 // LOCATION LOOKUP FUNCTIONS
 // ========================================
 async function getCoordinatesFromLocation(locationName) {
-    const knownLocations = {
-        'birmingham': { lat: 52.4862, lon: -1.8904 },
-        'birmingham, uk': { lat: 52.4862, lon: -1.8904 },
-        'london': { lat: 51.5074, lon: -0.1278 },
-        'london, uk': { lat: 51.5074, lon: -0.1278 },
-        'manchester': { lat: 53.4808, lon: -2.2426 },
-        'manchester, uk': { lat: 53.4808, lon: -2.2426 },
-        'leeds': { lat: 53.8008, lon: -1.5491 },
-        'bristol': { lat: 51.4545, lon: -2.5879 },
-        'liverpool': { lat: 53.4084, lon: -2.9916 },
-        'edinburgh': { lat: 55.9533, lon: -3.1883 },
-        'glasgow': { lat: 55.8642, lon: -4.2518 },
-        'cardiff': { lat: 51.4816, lon: -3.1791 },
-        'belfast': { lat: 54.5973, lon: -5.9301 }
-    };
-    
-    const normalized = locationName.toLowerCase().trim();
-    return knownLocations[normalized] || knownLocations['birmingham, uk'];
+    if (!isUsingRealAPI) {
+        // For demo mode, return some reasonable coordinates based on location
+        const knownLocations = {
+            'birmingham': { lat: 52.4862, lon: -1.8904 },
+            'birmingham, uk': { lat: 52.4862, lon: -1.8904 },
+            'london': { lat: 51.5074, lon: -0.1278 },
+            'london, uk': { lat: 51.5074, lon: -0.1278 },
+            'manchester': { lat: 53.4808, lon: -2.2426 },
+            'manchester, uk': { lat: 53.4808, lon: -2.2426 },
+            'leeds': { lat: 53.8008, lon: -1.5491 },
+            'bristol': { lat: 51.4545, lon: -2.5879 },
+            'liverpool': { lat: 53.4084, lon: -2.9916 },
+            'edinburgh': { lat: 55.9533, lon: -3.1883 },
+            'glasgow': { lat: 55.8642, lon: -4.2518 },
+            'cardiff': { lat: 51.4816, lon: -3.1791 },
+            'belfast': { lat: 54.5973, lon: -5.9301 },
+            'new york': { lat: 40.7128, lon: -74.0060 },
+            'paris': { lat: 48.8566, lon: 2.3522 },
+            'berlin': { lat: 52.5200, lon: 13.4050 },
+            'tokyo': { lat: 35.6762, lon: 139.6503 },
+            'sydney': { lat: -33.8688, lon: 151.2093 }
+        };
+        
+        const normalized = locationName.toLowerCase().trim();
+        return knownLocations[normalized] || knownLocations['birmingham, uk'];
+    }
+
+    try {
+        // Use OpenWeatherMap Geocoding API to get coordinates for any location
+        const geocodingUrl = `${OPENWEATHER_BASE_URL}${GEOCODING_ENDPOINT}?` +
+            `q=${encodeURIComponent(locationName)}&limit=1&appid=${WEATHER_API_KEY}`;
+        
+        console.log('Fetching coordinates for:', locationName);
+        
+        const response = await fetch(geocodingUrl);
+        
+        if (!response.ok) {
+            throw new Error(`Geocoding API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.length === 0) {
+            throw new Error(`Location "${locationName}" not found`);
+        }
+        
+        const result = { lat: data[0].lat, lon: data[0].lon };
+        console.log('✅ Found coordinates:', result);
+        return result;
+        
+    } catch (error) {
+        console.error('Error getting coordinates:', error);
+        // Fallback to Birmingham if geocoding fails
+        return { lat: 52.4862, lon: -1.8904 };
+    }
 }
 
 // ========================================
@@ -103,7 +143,7 @@ async function fetchOpenWeatherData(lat, lon) {
         const forecastUrl = `${OPENWEATHER_BASE_URL}${FORECAST_ENDPOINT}?` +
             `lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
 
-        console.log('Fetching OpenWeatherMap data...');
+        console.log('Fetching OpenWeatherMap data for coordinates:', lat, lon);
 
         const [currentResponse, forecastResponse] = await Promise.all([
             fetch(currentUrl),
@@ -111,17 +151,20 @@ async function fetchOpenWeatherData(lat, lon) {
         ]);
 
         if (!currentResponse.ok) {
-            throw new Error(`OpenWeatherMap current weather error: ${currentResponse.status}`);
+            throw new Error(`OpenWeatherMap current weather error: ${currentResponse.status} ${currentResponse.statusText}`);
         }
 
         if (!forecastResponse.ok) {
-            throw new Error(`OpenWeatherMap forecast error: ${forecastResponse.status}`);
+            throw new Error(`OpenWeatherMap forecast error: ${forecastResponse.status} ${forecastResponse.statusText}`);
         }
 
         const currentData = await currentResponse.json();
         const forecastData = await forecastResponse.json();
 
         console.log('✅ Successfully fetched OpenWeatherMap data');
+        console.log('Current weather:', currentData.name, currentData.main.temp + '°C');
+        console.log('Forecast points:', forecastData.list.length);
+        
         return { current: currentData, forecast: forecastData };
 
     } catch (error) {
@@ -519,34 +562,39 @@ async function getWeatherForecast() {
     resultsDiv.innerHTML = '<div class="loading">Fetching weather data for optimal washing times...</div>';
     
     try {
+        console.log('=== Starting weather forecast for:', location, '===');
+        
         // Get coordinates for the location
         const coords = await getCoordinatesFromLocation(location);
+        console.log('Coordinates found:', coords);
         
-        // Fetch weather data (OpenWeatherMap)
-        const weatherData = await fetchOpenWeatherData(coords.lat, coords.lon);
+        // Fetch weather data (OpenWeatherMap or demo)
+        let weatherData = null;
+        let processedData = null;
+        let dataSource = '';
         
-        let processedData;
-        
-        if (weatherData) {
-            // Use real OpenWeatherMap data
-            processedData = processOpenWeatherData(weatherData);
-            console.log('Using real OpenWeatherMap data for', location);
+        if (isUsingRealAPI) {
+            weatherData = await fetchOpenWeatherData(coords.lat, coords.lon);
+            
+            if (weatherData) {
+                // Use real OpenWeatherMap data
+                processedData = processOpenWeatherData(weatherData);
+                dataSource = '<div class="api-status api-live">📡 Live OpenWeatherMap Data</div>';
+                console.log('✅ Using real OpenWeatherMap data for', location);
+            }
         }
         
         if (!processedData) {
-            // Fall back to demo data
-            processedData = mockWeatherData[location] || mockWeatherData["Birmingham, UK"];
-            console.log('Using demo data for', location);
+            // Fall back to generated demo data
+            processedData = generateMockWeatherData(location);
+            dataSource = '<div class="api-status api-demo">🎭 Demo Data - Add OpenWeatherMap API key for real forecasts</div>';
+            console.log('📱 Using generated demo data for', location);
         }
         
         const bestTimes = findBestTimes(processedData.forecast, fabricType);
         const tips = getWashingTips(processedData.forecast);
         
         let html = '';
-        
-        const dataSource = weatherData ? 
-            '<div class="api-status api-live">📡 Live OpenWeatherMap Data</div>' :
-            '<div class="api-status api-demo">🎭 Demo Data - Add OpenWeatherMap API key for real forecasts</div>';
         
         html += dataSource;
         
@@ -557,7 +605,7 @@ async function getWeatherForecast() {
             html += `
                 <div class="best-times">
                     <h2>🎯 Best Times to Hang Washing</h2>
-                    <p>Optimal times for ${fabricText}:</p>
+                    <p>Optimal times for ${fabricText} in <strong>${location}</strong>:</p>
                     <div class="time-slots">
             `;
             
@@ -588,7 +636,7 @@ async function getWeatherForecast() {
             html += `
                 <div class="best-times" style="background: linear-gradient(135deg, #e17055, #fd79a8);">
                     <h2>⚠️ Poor Washing Conditions</h2>
-                    <p>Weather conditions aren't ideal for outdoor drying in the next few days. Consider indoor alternatives.</p>
+                    <p>Weather conditions aren't ideal for outdoor drying in <strong>${location}</strong> over the next few days. Consider indoor alternatives.</p>
                 </div>
             `;
         }
@@ -639,13 +687,15 @@ async function getWeatherForecast() {
         
         resultsDiv.innerHTML = html;
         
+        console.log('=== Weather forecast completed successfully ===');
+        
     } catch (error) {
         console.error('Error getting weather forecast:', error);
         resultsDiv.innerHTML = `
             <div class="error">
-                <strong>Error:</strong> Could not fetch weather data. ${error.message}
+                <strong>Error:</strong> Could not fetch weather data for "${location}". ${error.message}
                 <br><br>
-                Please try again or contact support if the issue persists.
+                Please check the location name and try again, or contact support if the issue persists.
             </div>
         `;
     }
