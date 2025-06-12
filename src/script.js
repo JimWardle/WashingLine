@@ -27,6 +27,56 @@ if (isUsingRealAPI) {
 }
 
 // ========================================
+// TIME UTILITY FUNCTIONS
+// ========================================
+function getCurrentUKTime() {
+    // Get current time in UK timezone
+    return new Date().toLocaleString("en-GB", {
+        timeZone: "Europe/London",
+        hour12: false
+    });
+}
+
+function getCurrentUKHour() {
+    // Get current hour in UK timezone (0-23)
+    const ukTime = new Date().toLocaleString("en-GB", {
+        timeZone: "Europe/London",
+        hour: '2-digit',
+        hour12: false
+    });
+    return parseInt(ukTime);
+}
+
+function getCurrentUKDate() {
+    // Get current date in UK timezone
+    return new Date().toLocaleDateString("en-GB", {
+        timeZone: "Europe/London"
+    });
+}
+
+function isTimeInPast(timeString) {
+    // Check if a time like "13:00" has already passed today
+    const currentHour = getCurrentUKHour();
+    const targetHour = parseInt(timeString.split(':')[0]);
+    
+    return targetHour <= currentHour;
+}
+
+function isGoodTimeToHangWashing(hour) {
+    // Don't suggest hanging washing too early or too late
+    // Good hours: 7 AM to 6 PM (19:00 is still okay for bringing in)
+    return hour >= 7 && hour <= 18;
+}
+
+function getTimeDisplayName(hour) {
+    // Convert 24-hour to readable format
+    if (hour === 0) return "Midnight";
+    if (hour < 12) return `${hour}:00 AM`;
+    if (hour === 12) return "12:00 PM";
+    return `${hour - 12}:00 PM`;
+}
+
+// ========================================
 // DEMO DATA (fallback)
 // ========================================
 const generateMockWeatherData = (locationName) => {
@@ -37,6 +87,36 @@ const generateMockWeatherData = (locationName) => {
     const baseTemp = random(12, 22);
     const baseHumidity = random(45, 75);
     const baseWind = random(8, 18);
+    const currentHour = getCurrentUKHour();
+    
+    // Generate hourly data for remaining hours today + tomorrow morning
+    const hourlyData = [];
+    
+    // For remaining hours today (if any good hours left)
+    for (let hour = Math.max(currentHour + 1, 7); hour <= 18; hour++) {
+        if (hour > currentHour) {
+            hourlyData.push({
+                time: `${hour.toString().padStart(2, '0')}:00`,
+                temp: baseTemp + random(-3, 4),
+                humidity: baseHumidity + random(-10, 15),
+                windSpeed: baseWind + random(-5, 8),
+                precipitation: random(0, 15)
+            });
+        }
+    }
+    
+    // Add tomorrow morning hours if we're late in the day
+    if (currentHour >= 15) {
+        for (let hour = 8; hour <= 12; hour++) {
+            hourlyData.push({
+                time: `Tomorrow ${hour.toString().padStart(2, '0')}:00`,
+                temp: baseTemp + random(-2, 3),
+                humidity: baseHumidity + random(-8, 12),
+                windSpeed: baseWind + random(-3, 6),
+                precipitation: random(0, 10)
+            });
+        }
+    }
     
     return {
         current: { 
@@ -53,12 +133,7 @@ const generateMockWeatherData = (locationName) => {
                 windSpeed: baseWind + random(-5, 8), 
                 precipitation: random(0, 20), 
                 description: "partly cloudy",
-                hourly: [
-                    { time: "09:00", temp: baseTemp - 2, humidity: baseHumidity + 5, windSpeed: baseWind - 3, precipitation: random(0, 10) },
-                    { time: "12:00", temp: baseTemp + 1, humidity: baseHumidity - 5, windSpeed: baseWind + 2, precipitation: random(0, 5) },
-                    { time: "15:00", temp: baseTemp + 3, humidity: baseHumidity - 8, windSpeed: baseWind + 5, precipitation: random(0, 5) },
-                    { time: "18:00", temp: baseTemp, humidity: baseHumidity, windSpeed: baseWind, precipitation: random(0, 15) }
-                ]
+                hourly: hourlyData
             },
             { date: "Tomorrow", temp: baseTemp + random(-3, 5), humidity: baseHumidity + random(-15, 15), windSpeed: baseWind + random(-5, 10), precipitation: random(0, 30), description: random(0, 1) ? "sunny" : "partly cloudy" },
             { date: "Day 3", temp: baseTemp + random(-4, 4), humidity: baseHumidity + random(-10, 20), windSpeed: baseWind + random(-3, 7), precipitation: random(0, 60), description: random(0, 2) === 0 ? "sunny" : random(0, 1) ? "partly cloudy" : "rainy" },
@@ -188,6 +263,7 @@ function processOpenWeatherData(weatherData) {
 
     const current = weatherData.current;
     const forecastList = weatherData.forecast.list;
+    const currentUKHour = getCurrentUKHour();
 
     // Process current conditions
     const currentConditions = {
@@ -201,20 +277,34 @@ function processOpenWeatherData(weatherData) {
     const dailyGroups = {};
     
     forecastList.forEach((item, index) => {
+        // Convert UTC timestamp to UK time
         const date = new Date(item.dt * 1000);
-        const dateKey = date.toDateString();
+        const ukDate = new Date(date.toLocaleString("en-US", {timeZone: "Europe/London"}));
+        const dateKey = ukDate.toDateString();
+        const hour = ukDate.getHours();
         
         if (!dailyGroups[dateKey]) {
             dailyGroups[dateKey] = [];
         }
         
-        dailyGroups[dateKey].push({
-            time: date.getHours().toString().padStart(2, '0') + ':00',
-            temp: Math.round(item.main.temp),
-            humidity: item.main.humidity,
-            windSpeed: Math.round(item.wind.speed * 3.6),
-            precipitation: Math.round((item.pop || 0) * 100) // Probability of precipitation
-        });
+        // Only include future times and good washing hours
+        const isToday = dateKey === new Date().toLocaleDateString("en-US", {timeZone: "Europe/London"});
+        const shouldInclude = !isToday || (hour > currentUKHour && isGoodTimeToHangWashing(hour));
+        
+        if (shouldInclude) {
+            const timeLabel = isToday ? 
+                `${hour.toString().padStart(2, '0')}:00` : 
+                `${hour.toString().padStart(2, '0')}:00`;
+                
+            dailyGroups[dateKey].push({
+                time: timeLabel,
+                temp: Math.round(item.main.temp),
+                humidity: item.main.humidity,
+                windSpeed: Math.round(item.wind.speed * 3.6),
+                precipitation: Math.round((item.pop || 0) * 100), // Probability of precipitation
+                isToday: isToday
+            });
+        }
     });
 
     // Create daily forecast summaries
@@ -227,6 +317,8 @@ function processOpenWeatherData(weatherData) {
         const dayName = index === 0 ? 'Today' : 
                        index === 1 ? 'Tomorrow' : 
                        date.toLocaleDateString('en-GB', { weekday: 'long' });
+
+        if (dayData.length === 0) return; // Skip days with no valid times
 
         // Calculate daily averages
         const avgTemp = Math.round(dayData.reduce((sum, h) => sum + h.temp, 0) / dayData.length);
@@ -247,9 +339,9 @@ function processOpenWeatherData(weatherData) {
             })
         };
 
-        // Add hourly data for today
-        if (index === 0) {
-            dayForecast.hourly = dayData.slice(0, 8); // Next 8 hours
+        // Add hourly data (limited to reasonable washing hours)
+        if (dayData.length > 0) {
+            dayForecast.hourly = dayData.slice(0, 8); // Next 8 viable hours
         }
 
         forecastData.push(dayForecast);
@@ -496,27 +588,38 @@ function getWindVisualization(windSpeed) {
 
 function findBestTimes(forecast, fabricType = 'cotton') {
     const bestTimes = [];
+    const currentHour = getCurrentUKHour();
     
-    if (forecast[0].hourly) {
+    // Check if it's too late today for new washing
+    const tooLateToday = currentHour >= 17; // After 5 PM
+    
+    if (forecast[0].hourly && !tooLateToday) {
         forecast[0].hourly.forEach(hour => {
-            const score = calculateWashingScore(hour.temp, hour.humidity, hour.windSpeed, hour.precipitation);
-            if (score >= 60) {
-                const dryingTime = calculateDryingTime(hour.temp, hour.humidity, hour.windSpeed, fabricType);
-                const safeTime = getSafeOutdoorTime(forecast, parseInt(hour.time.split(':')[0]));
-                
-                bestTimes.push({
-                    time: `Today ${hour.time}`,
-                    score: score,
-                    temp: hour.temp,
-                    conditions: `${hour.temp}°C, ${hour.humidity}% humidity, ${getWindVisualization(hour.windSpeed)}`,
-                    dryingTime: dryingTime,
-                    safeTime: safeTime,
-                    canFullyDry: dryingTime <= safeTime
-                });
+            const hourNum = parseInt(hour.time.split(':')[0]);
+            
+            // Skip past times and late evening hours
+            if (hourNum > currentHour && isGoodTimeToHangWashing(hourNum)) {
+                const score = calculateWashingScore(hour.temp, hour.humidity, hour.windSpeed, hour.precipitation);
+                if (score >= 60) {
+                    const dryingTime = calculateDryingTime(hour.temp, hour.humidity, hour.windSpeed, fabricType);
+                    const safeTime = getSafeOutdoorTime(forecast, hourNum);
+                    
+                    bestTimes.push({
+                        time: `Today ${hour.time}`,
+                        score: score,
+                        temp: hour.temp,
+                        conditions: `${hour.temp}°C, ${hour.humidity}% humidity, ${getWindVisualization(hour.windSpeed)}`,
+                        dryingTime: dryingTime,
+                        safeTime: safeTime,
+                        canFullyDry: dryingTime <= safeTime,
+                        isToday: true
+                    });
+                }
             }
         });
     }
     
+    // Add future days
     forecast.slice(1).forEach(day => {
         const score = calculateWashingScore(day.temp, day.humidity, day.windSpeed, day.precipitation);
         if (score >= 60) {
@@ -530,18 +633,16 @@ function findBestTimes(forecast, fabricType = 'cotton') {
                 conditions: `${day.temp}°C, ${day.humidity}% humidity, ${getWindVisualization(day.windSpeed)}`,
                 dryingTime: dryingTime,
                 safeTime: safeTime,
-                canFullyDry: dryingTime <= safeTime
+                canFullyDry: dryingTime <= safeTime,
+                isToday: false
             });
         }
     });
     
     return bestTimes.sort((a, b) => {
         // Always put "Today" items first
-        const aIsToday = a.time.includes('Today');
-        const bIsToday = b.time.includes('Today');
-        
-        if (aIsToday && !bIsToday) return -1;
-        if (!aIsToday && bIsToday) return 1;
+        if (a.isToday && !b.isToday) return -1;
+        if (!a.isToday && b.isToday) return 1;
         
         // Then sort by score within each group
         return b.score - a.score;
@@ -550,6 +651,14 @@ function findBestTimes(forecast, fabricType = 'cotton') {
 
 function getWashingTips(forecast) {
     const tips = [];
+    const currentHour = getCurrentUKHour();
+    
+    // Add time-specific tips
+    if (currentHour >= 18) {
+        tips.push("It's getting late - consider washing tomorrow morning for best drying results");
+    } else if (currentHour <= 6) {
+        tips.push("Early bird! Wait until 7-8 AM for optimal drying conditions");
+    }
     
     const avgHumidity = forecast.reduce((sum, day) => sum + day.humidity, 0) / forecast.length;
     const avgWind = forecast.reduce((sum, day) => sum + day.windSpeed, 0) / forecast.length;
@@ -590,10 +699,15 @@ async function getWeatherForecast() {
         return;
     }
     
-    resultsDiv.innerHTML = '<div class="loading">Fetching weather data for optimal washing times...</div>';
+    const currentUKTime = getCurrentUKTime();
+    const currentHour = getCurrentUKHour();
+    
+    resultsDiv.innerHTML = `<div class="loading">Fetching weather data for optimal washing times...<br><small>Current UK time: ${currentUKTime}</small></div>`;
     
     try {
         console.log('=== Starting weather forecast for:', location, '===');
+        console.log('Current UK time:', currentUKTime);
+        console.log('Current UK hour:', currentHour);
         
         // Get coordinates for the location
         const coords = await getCoordinatesFromLocation(location);
@@ -629,6 +743,9 @@ async function getWeatherForecast() {
         
         html += dataSource;
         
+        // Add current time info
+        html += `<div class="time-info">🕐 Current UK time: ${currentUKTime}</div>`;
+        
         if (bestTimes.length > 0) {
             const fabricSelect = document.getElementById('fabricType');
             const fabricText = fabricSelect.options[fabricSelect.selectedIndex].text.toLowerCase();
@@ -641,33 +758,42 @@ async function getWeatherForecast() {
             `;
             
             bestTimes.forEach((time, index) => {
-                const isToday = time.time.includes('Today');
+                const isToday = time.isToday;
                 const isFirstToday = isToday && index === 0;
                 
                 // Find the actual best score among all times
                 const bestOverallScore = Math.max(...bestTimes.map(t => t.score));
                 const isBestOverall = time.score === bestOverallScore;
                 
-                const emoji = isFirstToday ? '⏰' : isBestOverall ? '🌟' : '📅';
-                const urgency = isToday ? 'today-item' : 'future-item';
-                const badge = isBestOverall ? 'best-choice' : 'good-choice';
-                const badgeText = isBestOverall ? 'BEST' : isToday ? 'TODAY' : 'GOOD';
+                let emoji, hangTime, timeDisplay;
                 
-                // Calculate suggested hang-out time
-                let hangTime = '';
-                if (isToday && time.time.includes(':')) {
-                    hangTime = `Hang out now (${time.time.split(' ')[1]})`;
-                } else if (isToday) {
-                    hangTime = 'Hang out anytime today';
+                if (isToday) {
+                    emoji = '⏰';
+                    const hourMatch = time.time.match(/(\d{2}):00/);
+                    if (hourMatch) {
+                        const hour = parseInt(hourMatch[1]);
+                        const timeStr = getTimeDisplayName(hour);
+                        timeDisplay = `Today ${timeStr}`;
+                        hangTime = `Hang out at ${timeStr}`;
+                    } else {
+                        timeDisplay = time.time;
+                        hangTime = 'Hang out later today';
+                    }
                 } else {
-                    hangTime = 'Hang out after 9am';
+                    emoji = isBestOverall ? '🌟' : '📅';
+                    timeDisplay = time.time;
+                    hangTime = 'Hang out after 8 AM';
                 }
+                
+                const urgency = isToday ? 'today-item' : 'future-item';
+                const badge = isBestOverall ? 'best-choice' : isToday ? 'today-choice' : 'good-choice';
+                const badgeText = isBestOverall ? 'BEST' : isToday ? 'TODAY' : 'GOOD';
                 
                 html += `
                     <div class="recommendation ${urgency}">
                         <div class="rec-header">
                             <span class="rec-emoji">${emoji}</span>
-                            <span class="rec-time">${time.time}</span>
+                            <span class="rec-time">${timeDisplay}</span>
                             <span class="rec-badge ${badge}">${badgeText}</span>
                         </div>
                         <div class="rec-hang-time">
@@ -687,17 +813,32 @@ async function getWeatherForecast() {
             
             html += '</div></div>';
         } else {
-            html += `
-                <div class="best-times poor-conditions">
-                    <h2>⚠️ Not Great for Washing</h2>
-                    <p>Weather in <strong>${location}</strong> isn't ideal for outdoor drying over the next few days.</p>
-                    <div class="poor-advice">
-                        <div class="advice-item">🏠 Consider indoor drying</div>
-                        <div class="advice-item">⏳ Wait for better conditions</div>
-                        <div class="advice-item">🌡️ Use a heated drying rack</div>
+            // Check if it's too late today
+            if (currentHour >= 17) {
+                html += `
+                    <div class="best-times late-today">
+                        <h2>🌙 Too Late Today</h2>
+                        <p>It's getting late (${getTimeDisplayName(currentHour)}) to hang washing in <strong>${location}</strong>.</p>
+                        <div class="late-advice">
+                            <div class="advice-item">🌅 Try tomorrow morning after 8 AM</div>
+                            <div class="advice-item">🏠 Consider indoor drying tonight</div>
+                            <div class="advice-item">⏰ Set a reminder for tomorrow</div>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            } else {
+                html += `
+                    <div class="best-times poor-conditions">
+                        <h2>⚠️ Not Great for Washing</h2>
+                        <p>Weather in <strong>${location}</strong> isn't ideal for outdoor drying over the next few days.</p>
+                        <div class="poor-advice">
+                            <div class="advice-item">🏠 Consider indoor drying</div>
+                            <div class="advice-item">⏳ Wait for better conditions</div>
+                            <div class="advice-item">🌡️ Use a heated drying rack</div>
+                        </div>
+                    </div>
+                `;
+            }
         }
         
         html += '<div class="forecast-grid">';
