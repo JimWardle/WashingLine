@@ -650,12 +650,21 @@ function findBestTimes(forecast, fabricType = 'cotton') {
         }
     });
     
-    // Sort by chronological order (today first, then by forecast index)
+    // Sort by chronological order first, then by score within same day
     const sorted = bestTimes.sort((a, b) => {
+        // Tomorrow always comes first
+        if (a.time.includes('Tomorrow') && !b.time.includes('Tomorrow')) return -1;
+        if (!a.time.includes('Tomorrow') && b.time.includes('Tomorrow')) return 1;
+        
+        // Today items first (if any)
         if (a.isToday && !b.isToday) return -1;
         if (!a.isToday && b.isToday) return 1;
+        
+        // Then by chronological order (sortOrder represents the day index)
         if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
-        return b.score - a.score; // Then by score
+        
+        // Finally by score within the same day
+        return b.score - a.score;
     }).slice(0, 3);
     
     console.log('Best times found:', sorted.map(t => `${t.time} (score: ${t.score})`));
