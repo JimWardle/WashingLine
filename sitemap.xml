@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+   
+   <!-- Main Application Page -->
+   <url>
+      <loc>https://jimwardle.github.io/WashingLine/</loc>
+      <lastmod>2025-06-12</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>1.0</priority>
+      <image:image>
+         <image:loc>https://jimwardle.github.io/WashingLine/img/pegit.png</image:loc>
+         <image:title>Peg It! Logo - Weather app for hanging washing</image:title>
+         <image:caption>Smart weather forecast app for hanging washing outside</image:caption>
+      </image:image>
+   </url>
+   
+   <!-- Future content pages (add these as you create them) -->
+   <!--
+   <url>
+      <loc>https://jimwardle.github.io/WashingLine/tips/</loc>
+      <lastmod>2025-06-12</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   
+   <url>
+      <loc>https://jimwardle.github.io/WashingLine/about/</loc>
+      <lastmod>2025-06-12</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+   </url>
+   
+   <url>
+      <loc>https://jimwardle.github.io/WashingLine/faq/</loc>
+      <lastmod>2025-06-12</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.7</priority>
+   </url>
+   -->
+   
+</urlset>
