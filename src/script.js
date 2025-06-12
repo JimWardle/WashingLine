@@ -277,24 +277,30 @@ function processOpenWeatherData(weatherData) {
     const dailyGroups = {};
     
     forecastList.forEach((item, index) => {
-        // Convert UTC timestamp to UK time
-        const date = new Date(item.dt * 1000);
-        const ukDate = new Date(date.toLocaleString("en-US", {timeZone: "Europe/London"}));
+        // Convert UTC timestamp to UK time properly
+        const utcDate = new Date(item.dt * 1000);
+        const ukDateString = utcDate.toLocaleDateString("en-GB", {timeZone: "Europe/London"});
+        const ukTimeString = utcDate.toLocaleTimeString("en-GB", {timeZone: "Europe/London", hour12: false});
+        
+        // Create a proper Date object for UK timezone
+        const [day, month, year] = ukDateString.split('/');
+        const [hour, minute] = ukTimeString.split(':');
+        const ukDate = new Date(year, month - 1, day, hour, minute);
+        
         const dateKey = ukDate.toDateString();
-        const hour = ukDate.getHours();
+        const hourValue = ukDate.getHours();
         
         if (!dailyGroups[dateKey]) {
             dailyGroups[dateKey] = [];
         }
         
         // Only include future times and good washing hours
-        const isToday = dateKey === new Date().toLocaleDateString("en-US", {timeZone: "Europe/London"});
-        const shouldInclude = !isToday || (hour > currentUKHour && isGoodTimeToHangWashing(hour));
+        const todayKey = new Date().toDateString();
+        const isToday = dateKey === todayKey;
+        const shouldInclude = !isToday || (hourValue > currentUKHour && isGoodTimeToHangWashing(hourValue));
         
         if (shouldInclude) {
-            const timeLabel = isToday ? 
-                `${hour.toString().padStart(2, '0')}:00` : 
-                `${hour.toString().padStart(2, '0')}:00`;
+            const timeLabel = `${hourValue.toString().padStart(2, '0')}:00`;
                 
             dailyGroups[dateKey].push({
                 time: timeLabel,
@@ -314,9 +320,19 @@ function processOpenWeatherData(weatherData) {
     dateKeys.forEach((dateKey, index) => {
         const dayData = dailyGroups[dateKey];
         const date = new Date(dateKey);
-        const dayName = index === 0 ? 'Today' : 
-                       index === 1 ? 'Tomorrow' : 
-                       date.toLocaleDateString('en-GB', { weekday: 'long' });
+        
+        // Get proper day names based on actual dates, not just index
+        const today = new Date().toDateString();
+        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString();
+        
+        let dayName;
+        if (dateKey === today) {
+            dayName = 'Today';
+        } else if (dateKey === tomorrow) {
+            dayName = 'Tomorrow';
+        } else {
+            dayName = date.toLocaleDateString('en-GB', { weekday: 'long' });
+        }
 
         if (dayData.length === 0) return; // Skip days with no valid times
 
