@@ -56,6 +56,18 @@ body {
     opacity: 0.9;
 }
 
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .location-input {
     display: flex;
     gap: 10px;
@@ -623,6 +635,347 @@ button:disabled {
     left: 0;
 }
 
+/* Quick Links Styling */
+.quick-links {
+    background: #f8faf9;
+    border-radius: 15px;
+    padding: 25px;
+    margin-top: 30px;
+    text-align: center;
+}
+
+.quick-links h2 {
+    color: #6b9b7f;
+    margin-bottom: 20px;
+}
+
+.links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.resource-link {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.resource-link:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border-color: #6b9b7f;
+}
+
+.link-icon {
+    font-size: 2em;
+    flex-shrink: 0;
+}
+
+.link-content h3 {
+    margin: 0 0 5px 0;
+    color: #2d5a3d;
+    font-size: 1.1em;
+}
+
+.link-content p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+/* SEO Content Styling */
+.seo-content {
+    background: #f8faf9;
+    border-radius: 15px;
+    padding: 25px;
+    margin-top: 30px;
+}
+
+.seo-content h2 {
+    color: #6b9b7f;
+    margin-bottom: 15px;
+}
+
+.seo-content h3 {
+    color: #2d5a3d;
+    margin: 20px 0 10px 0;
+}
+
+.seo-content h4 {
+    color: #2d5a3d;
+    margin: 15px 0 8px 0;
+    font-size: 1.1em;
+}
+
+.seo-content ul {
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+.seo-content li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.faq-section {
+    margin-top: 25px;
+}
+
+.faq-section summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #6b9b7f;
+    margin-bottom: 15px;
+}
+
+.faq-content {
+    padding-left: 15px;
+}
+
+/* Footer Styling */
+.footer {
+    margin-top: 40px;
+    padding: 20px 0;
+    border-top: 1px solid #eee;
+    text-align: center;
+    color: #666;
+}
+
+/* TIPS PAGE STYLES */
+.tips-body {
+    background: linear-gradient(135deg, #a8e6cf 0%, #7fcdcd 50%, #88d8c0 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.tips-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.breadcrumb {
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    color: #6b9b7f;
+}
+
+.breadcrumb a {
+    color: #6b9b7f;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.tips-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.tips-header h1 {
+    color: #2d5a3d;
+    font-size: 2.2em;
+    margin-bottom: 15px;
+    line-height: 1.2;
+}
+
+.tips-intro {
+    font-size: 1.1em;
+    color: #555;
+    line-height: 1.6;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.tip-section {
+    background: #f8faf9;
+    border-left: 4px solid #6b9b7f;
+    padding: 25px;
+    border-radius: 10px;
+    margin: 30px 0;
+}
+
+.tip-section h2 {
+    color: #6b9b7f;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+.tip-section h3 {
+    color: #2d5a3d;
+    margin: 20px 0 10px 0;
+    font-size: 1.2em;
+}
+
+.weather-guide {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.weather-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.weather-icon {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.weather-title {
+    font-weight: bold;
+    color: #2d5a3d;
+    margin-bottom: 8px;
+}
+
+.weather-desc {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.dos-donts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.do-section, .dont-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.do-section {
+    border-left: 4px solid #27ae60;
+}
+
+.dont-section {
+    border-left: 4px solid #e74c3c;
+}
+
+.do-section h3 {
+    color: #27ae60;
+}
+
+.dont-section h3 {
+    color: #e74c3c;
+}
+
+.tips-list {
+    list-style: none;
+    padding: 0;
+}
+
+.tips-list li {
+    margin-bottom: 12px;
+    padding-left: 25px;
+    position: relative;
+    line-height: 1.5;
+}
+
+.do-section .tips-list li:before {
+    content: "✅";
+    position: absolute;
+    left: 0;
+}
+
+.dont-section .tips-list li:before {
+    content: "❌";
+    position: absolute;
+    left: 0;
+}
+
+.energy-savings {
+    background: linear-gradient(135deg, #6b9b7f, #8db4a0);
+    color: white;
+    padding: 25px;
+    border-radius: 15px;
+    margin: 30px 0;
+    text-align: center;
+}
+
+.savings-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 15px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.back-to-app {
+    text-align: center;
+    margin: 40px 0;
+}
+
+.cta-button {
+    display: inline-block;
+    background: linear-gradient(45deg, #4a7c59, #2d5a27);
+    color: white;
+    padding: 15px 30px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform 0.3s ease;
+}
+
+.cta-button:hover {
+    transform: translateY(-2px);
+}
+
+.tips-footer {
+    margin-top: 40px;
+    padding: 20px 0;
+    border-top: 1px solid #eee;
+    text-align: center;
+    color: #666;
+}
+
+.tips-footer a {
+    color: #6b9b7f;
+    text-decoration: none;
+    margin: 0 10px;
+}
+
+.tips-footer a:hover {
+    text-decoration: underline;
+}
+
 @media (max-width: 600px) {
     .container {
         padding: 20px;
@@ -690,5 +1043,23 @@ button:disabled {
     
     .time-date {
         font-size: 0.85em;
+    }
+
+    /* Tips page mobile styles */
+    .tips-container {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .tips-header h1 {
+        font-size: 1.8em;
+    }
+    
+    .dos-donts {
+        grid-template-columns: 1fr;
+    }
+    
+    .weather-guide {
+        grid-template-columns: 1fr;
     }
 }
