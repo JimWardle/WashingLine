@@ -1,10 +1,12 @@
-# Peg It! 🧺
+# Peg It! ☁️
 
 **For when it's fine to dry on the line**
 
 A smart weather-powered app that tells you the best times to hang out your washing based on real weather conditions. No more guessing - know exactly when it's perfect for line drying!
 
 ![Peg It! Screenshot](src/img/pegit.png)
+
+🌐 **Live Site:** [pegit.cloud](https://pegit.cloud)
 
 ## 🌟 Features
 
@@ -13,21 +15,23 @@ A smart weather-powered app that tells you the best times to hang out your washi
 - **Fabric-Specific Advice** - Different recommendations for cotton, heavy items, delicates, and bedding
 - **5-Day Forecast** - Plan your laundry week ahead
 - **Safe Outdoor Time** - Tells you how long clothes can stay outside before rain
+- **Enhanced Time Display** - Beautiful UK timezone-aware time formatting
 - **Detailed Wind Visualization** - Visual indicators for wind conditions
 - **Mobile-Friendly** - Responsive design works on all devices
+- **SEO Optimized** - Comprehensive tips page and search engine optimization
 - **Demo Mode** - Works without API key using generated demo data
 
 ## 🚀 Quick Start
 
-### Option 1: Use the Live Demo
-Visit the deployed version at: `https://your-username.github.io/washingline/`
+### Option 1: Visit the Live Site
+Visit [pegit.cloud](https://pegit.cloud) - no setup required!
 
 ### Option 2: Run Locally
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/washingline.git
-   cd washingline
+   git clone https://github.com/JimWardle/WashingLine.git
+   cd WashingLine
    ```
 
 2. **Get an OpenWeatherMap API Key (Optional)**
@@ -87,36 +91,42 @@ Peg It! calculates a washing score (0-100) based on four key factors:
 ## 🏗️ Project Structure
 
 ```
-washingline/
+WashingLine/
 ├── src/
-│   ├── index.html          # Main HTML file
+│   ├── index.html          # Main HTML file with SEO optimization
 │   ├── script.js           # Weather API logic & calculations
 │   ├── styles.css          # Responsive CSS styling
+│   ├── sitemap.xml         # SEO sitemap
+│   ├── robots.txt          # Search engine guidance
+│   ├── CNAME              # Custom domain configuration
+│   ├── tips/
+│   │   └── index.html      # Comprehensive drying tips page
 │   └── img/
 │       └── pegit.png       # App logo
 ├── .github/workflows/
 │   └── deploy.yml          # GitHub Pages deployment
 ├── package.json            # Project metadata
 ├── README.md               # This file
+├── claude.md               # Technical documentation
 └── .gitignore             # Git ignore rules
 ```
 
 ## 🔄 Deployment
 
-### GitHub Pages (Recommended)
+### Automatic GitHub Pages Deployment
 
-The project includes automatic GitHub Pages deployment:
+The project includes automatic deployment to [pegit.cloud](https://pegit.cloud):
 
-1. **Fork/Clone this repository**
-2. **Add your API key** as a repository secret named `WEATHER_API_KEY`
-3. **Enable GitHub Pages** in repository settings
-4. **Push to main branch** - deployment happens automatically
+1. **Push to main branch** - deployment happens automatically
+2. **API key injection** - Securely injects OpenWeatherMap API key
+3. **Multi-page deployment** - Builds main app + tips page
+4. **Custom domain** - Deploys to pegit.cloud with SSL
 
 The workflow:
-- Builds the project
+- Builds the project from `src/` directory
 - Injects your API key securely
-- Deploys to GitHub Pages
-- Updates on every push to main
+- Copies all necessary files (HTML, CSS, JS, images, tips page)
+- Deploys to GitHub Pages with custom domain
 
 ### Manual Deployment
 
@@ -132,27 +142,46 @@ For other hosting platforms:
 - **Hang lighter items first** on windy days
 - **Bring clothes in** if conditions change unexpectedly
 - **Use fabric selector** for accurate drying time estimates
+- **Visit the tips page** for comprehensive outdoor drying guidance
 
 ### Understanding the Recommendations
-- **🌟 BEST** = Highest scoring time period
-- **⏰ TODAY** = Opportunities available today
+- **🌟 BEST** = Highest scoring time period with optimal conditions
+- **⏰ TODAY** = Opportunities available today (timezone-aware)
 - **📅 GOOD** = Decent conditions in coming days
-- **✅ Will dry completely** = Safe to leave out
+- **✅ Will dry completely** = Safe to leave out for full drying cycle
 - **⚠️ May need bringing in** = Monitor weather changes
+
+## 💰 Monetization & Performance
+
+### Current Implementation
+- **Google AdSense** integration ready
+- **SEO optimized** for organic traffic growth
+- **Professional domain** (pegit.cloud) for credibility
+
+### Planned Optimizations
+- **API call caching** - Cache popular locations to reduce OpenWeatherMap API costs
+- **Smart caching strategy** - Auto-cache frequently searched UK cities
+- **Performance monitoring** - Track usage patterns and optimize accordingly
 
 ## 🛠️ Development
 
 ### Technologies Used
-- **Vanilla JavaScript** - Core functionality
-- **OpenWeatherMap API** - Weather data
-- **CSS Grid/Flexbox** - Responsive layout
-- **GitHub Actions** - CI/CD deployment
+- **Vanilla JavaScript** - Core functionality with modern ES6+ features
+- **OpenWeatherMap API** - Real-time weather data
+- **CSS Grid/Flexbox** - Responsive layout with mobile-first design
+- **GitHub Actions** - CI/CD deployment pipeline
+- **Custom Domain** - Professional branding with pegit.cloud
 
 ### API Integration
 The app uses OpenWeatherMap's:
 - **Geocoding API** - Convert city names to coordinates
 - **Current Weather API** - Real-time conditions
-- **5-Day Forecast API** - Extended predictions
+- **5-Day Forecast API** - Extended predictions with hourly data
+
+### UK-Specific Features
+- **Timezone handling** - Proper UK timezone conversion and display
+- **Regional considerations** - Weather advice tailored for UK climate
+- **Local cities** - Pre-configured coordinates for major UK locations
 
 ### Local Development
 ```bash
@@ -165,6 +194,22 @@ npm run dev
 # Build for production
 npm run build
 ```
+
+## 🌐 SEO & Content Strategy
+
+### Search Optimization
+- **Comprehensive meta tags** - Title, description, keywords
+- **Structured data** - Schema.org markup for rich snippets
+- **Open Graph & Twitter Cards** - Social media optimization
+- **Sitemap.xml** - Search engine discovery
+- **Tips page** - 2,800+ words of SEO-optimized content
+
+### Target Keywords
+- "hang washing outside"
+- "best time to dry clothes"
+- "weather for drying clothes"
+- "UK outdoor drying guide"
+- "energy saving laundry tips"
 
 ## 🤝 Contributing
 
@@ -181,6 +226,7 @@ npm run build
 - Test on mobile devices
 - Follow existing code style
 - Update documentation for new features
+- Consider API cost implications
 
 ## 📝 License
 
@@ -191,7 +237,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **OpenWeatherMap** for providing weather data API
 - **Weather icons** from system emoji
 - **Color palette** inspired by fresh laundry and nature
-- **GitHub Pages** for free hosting
+- **GitHub Pages** for free hosting with custom domain support
 
 ## 🐛 Support
 
@@ -201,16 +247,26 @@ Having issues? Here's how to get help:
 2. **Verify API key** - common source of issues
 3. **Open an issue** - describe the problem with details
 4. **Check browser console** - for error messages
+5. **Visit the tips page** - for usage guidance
 
 ## 🔮 Future Enhancements
 
-- [ ] Historical weather patterns
-- [ ] Pollen count integration
-- [ ] UV index warnings
-- [ ] Washing reminders/notifications
-- [ ] Multiple location support
+### Immediate Priorities
+- [ ] **API caching system** - MySQL database for popular locations
+- [ ] **Usage analytics** - Track most searched cities
+- [ ] **Cost optimization** - Smart API call management
+
+### Long-term Features
+- [ ] Historical weather patterns analysis
+- [ ] Pollen count integration for allergy sufferers
+- [ ] UV index warnings for fabric protection
+- [ ] Push notifications for perfect drying conditions
+- [ ] Multiple location support for users
 - [ ] Offline mode with cached data
+- [ ] Premium features (extended forecasts, alerts)
 
 ---
 
 **Happy drying!** 🌞👕🧺
+
+Made with ❤️ for UK households | Visit us at [pegit.cloud](https://pegit.cloud)
