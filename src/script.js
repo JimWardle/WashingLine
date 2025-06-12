@@ -11,15 +11,13 @@ const CURRENT_WEATHER_ENDPOINT = '/data/2.5/weather';
 const FORECAST_ENDPOINT = '/data/2.5/forecast';
 
 // Check if we're using real API key
-// If it's 32 characters and starts with alphanumeric, it's likely a real OpenWeatherMap key
 const isUsingRealAPI = WEATHER_API_KEY.length === 32 && /^[a-f0-9]{32}$/i.test(WEATHER_API_KEY);
 
 // Debug logging
+console.log('=== PEG IT DEBUG INFO ===');
+console.log('Current time:', new Date().toISOString());
+console.log('UK time:', new Date().toLocaleString("en-GB", {timeZone: "Europe/London"}));
 console.log('Weather API Key configured:', isUsingRealAPI);
-console.log('Weather API Key length:', WEATHER_API_KEY.length);
-console.log('Weather API Key starts with:', WEATHER_API_KEY.substring(0, 8) + '...');
-console.log('Is valid hex format?:', /^[a-f0-9]{32}$/i.test(WEATHER_API_KEY));
-console.log('Raw API Key (first 10 chars):', JSON.stringify(WEATHER_API_KEY.substring(0, 10)));
 if (isUsingRealAPI) {
     console.log('✅ Ready to use OpenWeatherMap API');
 } else {
@@ -30,7 +28,6 @@ if (isUsingRealAPI) {
 // TIME UTILITY FUNCTIONS
 // ========================================
 function getCurrentUKTime() {
-    // Get current time in UK timezone
     return new Date().toLocaleString("en-GB", {
         timeZone: "Europe/London",
         hour12: false
@@ -38,7 +35,6 @@ function getCurrentUKTime() {
 }
 
 function getCurrentUKHour() {
-    // Get current hour in UK timezone (0-23)
     const ukTime = new Date().toLocaleString("en-GB", {
         timeZone: "Europe/London",
         hour: '2-digit',
@@ -47,40 +43,46 @@ function getCurrentUKHour() {
     return parseInt(ukTime);
 }
 
-function getCurrentUKDate() {
-    // Get current date in UK timezone
-    return new Date().toLocaleDateString("en-GB", {
-        timeZone: "Europe/London"
-    });
+function getTodayUKDateString() {
+    return new Date().toLocaleDateString("en-GB", {timeZone: "Europe/London"});
 }
 
-function isTimeInPast(timeString) {
-    // Check if a time like "13:00" has already passed today
-    const currentHour = getCurrentUKHour();
-    const targetHour = parseInt(timeString.split(':')[0]);
+function getTomorrowUKDateString() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toLocaleDateString("en-GB", {timeZone: "Europe/London"});
+}
+
+function getDateFromUKString(ukDateString) {
+    // Convert "DD/MM/YYYY" to Date object
+    const [day, month, year] = ukDateString.split('/').map(Number);
+    return new Date(year, month - 1, day);
+}
+
+function getDayNameFromUKDate(ukDateString) {
+    const today = getTodayUKDateString();
+    const tomorrow = getTomorrowUKDateString();
     
-    return targetHour <= currentHour;
+    console.log(`Comparing dates - Input: ${ukDateString}, Today: ${today}, Tomorrow: ${tomorrow}`);
+    
+    if (ukDateString === today) {
+        return 'Today';
+    } else if (ukDateString === tomorrow) {
+        return 'Tomorrow';
+    } else {
+        const date = getDateFromUKString(ukDateString);
+        return date.toLocaleDateString('en-GB', { weekday: 'long' });
+    }
 }
 
 function isGoodTimeToHangWashing(hour) {
-    // Don't suggest hanging washing too early or too late
-    // Good hours: 7 AM to 6 PM (19:00 is still okay for bringing in)
     return hour >= 7 && hour <= 18;
 }
 
-function getTimeDisplayName(hour) {
-    // Convert 24-hour to readable format
-    if (hour === 0) return "Midnight";
-    if (hour < 12) return `${hour}:00 AM`;
-    if (hour === 12) return "12:00 PM";
-    return `${hour - 12}:00 PM`;
-}
-
 // ========================================
-// DEMO DATA (fallback)
+// DEMO DATA (fallback with proper dates)
 // ========================================
 const generateMockWeatherData = (locationName) => {
-    // Generate different mock data based on location name for variety
     const seed = locationName.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
     const random = (min, max) => Math.floor((seed * 9301 + 49297) % 233280 / 233280 * (max - min + 1)) + min;
     
@@ -89,34 +91,65 @@ const generateMockWeatherData = (locationName) => {
     const baseWind = random(8, 18);
     const currentHour = getCurrentUKHour();
     
-    // Generate hourly data for remaining hours today + tomorrow morning
-    const hourlyData = [];
+    console.log('=== GENERATING DEMO DATA ===');
+    console.log('Current hour:', currentHour);
     
-    // For remaining hours today (if any good hours left)
-    for (let hour = Math.max(currentHour + 1, 7); hour <= 18; hour++) {
-        if (hour > currentHour) {
+    // Create forecast for the next 5 days starting from today
+    const forecast = [];
+    
+    for (let dayOffset = 0; dayOffset < 5; dayOffset++) {
+        const forecastDate = new Date();
+        forecastDate.setDate(forecastDate.getDate() + dayOffset);
+        const ukDateString = forecastDate.toLocaleDateString("en-GB", {timeZone: "Europe/London"});
+        const dayName = getDayNameFromUKDate(ukDateString);
+        
+        console.log(`Day ${dayOffset}: ${dayName} (${ukDateString})`);
+        
+        // Generate hourly data
+        const hourlyData = [];
+        const isToday = dayOffset === 0;
+        
+        // For today, only include future hours that are good for washing
+        // For other days, include good washing hours
+        const startHour = isToday ? Math.max(currentHour + 1, 7) : 8;
+        const endHour = 18;
+        
+        for (let hour = startHour; hour <= endHour; hour++) {
+            if (isToday && hour <= currentHour) continue; // Skip past hours
+            if (!isGoodTimeToHangWashing(hour)) continue; // Skip bad hours
+            
             hourlyData.push({
                 time: `${hour.toString().padStart(2, '0')}:00`,
-                temp: baseTemp + random(-3, 4),
-                humidity: baseHumidity + random(-10, 15),
-                windSpeed: baseWind + random(-5, 8),
-                precipitation: random(0, 15)
+                temp: baseTemp + random(-3, 4) + (dayOffset * random(-1, 2)),
+                humidity: baseHumidity + random(-10, 15) + (dayOffset * random(-5, 5)),
+                windSpeed: baseWind + random(-5, 8) + (dayOffset * random(-2, 3)),
+                precipitation: random(0, 15) + (dayOffset * random(0, 10)),
+                isToday: isToday
+            });
+        }
+        
+        // Only add day if it has viable hours
+        if (hourlyData.length > 0 || !isToday) {
+            const dayTemp = baseTemp + random(-2, 3) + (dayOffset * random(-1, 2));
+            const dayHumidity = baseHumidity + random(-10, 10) + (dayOffset * random(-5, 5));
+            const dayWind = baseWind + random(-5, 8) + (dayOffset * random(-2, 3));
+            const dayPrecip = random(0, 20) + (dayOffset * random(0, 15));
+            
+            forecast.push({
+                date: dayName,
+                temp: dayTemp,
+                humidity: dayHumidity,
+                windSpeed: dayWind,
+                precipitation: dayPrecip,
+                description: dayPrecip > 30 ? 'rainy' : dayHumidity > 70 ? 'overcast' : 'partly cloudy',
+                hourly: hourlyData,
+                rawDate: ukDateString,
+                dayOffset: dayOffset
             });
         }
     }
     
-    // Add tomorrow morning hours if we're late in the day
-    if (currentHour >= 15) {
-        for (let hour = 8; hour <= 12; hour++) {
-            hourlyData.push({
-                time: `Tomorrow ${hour.toString().padStart(2, '0')}:00`,
-                temp: baseTemp + random(-2, 3),
-                humidity: baseHumidity + random(-8, 12),
-                windSpeed: baseWind + random(-3, 6),
-                precipitation: random(0, 10)
-            });
-        }
-    }
+    console.log('Generated forecast:', forecast.map(d => `${d.date} (${d.rawDate})`));
     
     return {
         current: { 
@@ -125,21 +158,7 @@ const generateMockWeatherData = (locationName) => {
             windSpeed: baseWind, 
             description: "partly cloudy" 
         },
-        forecast: [
-            { 
-                date: "Today", 
-                temp: baseTemp + random(-2, 3), 
-                humidity: baseHumidity + random(-10, 10), 
-                windSpeed: baseWind + random(-5, 8), 
-                precipitation: random(0, 20), 
-                description: "partly cloudy",
-                hourly: hourlyData
-            },
-            { date: "Tomorrow", temp: baseTemp + random(-3, 5), humidity: baseHumidity + random(-15, 15), windSpeed: baseWind + random(-5, 10), precipitation: random(0, 30), description: random(0, 1) ? "sunny" : "partly cloudy" },
-            { date: "Day 3", temp: baseTemp + random(-4, 4), humidity: baseHumidity + random(-10, 20), windSpeed: baseWind + random(-3, 7), precipitation: random(0, 60), description: random(0, 2) === 0 ? "sunny" : random(0, 1) ? "partly cloudy" : "rainy" },
-            { date: "Day 4", temp: baseTemp + random(-2, 6), humidity: baseHumidity + random(-5, 15), windSpeed: baseWind + random(-2, 8), precipitation: random(0, 25), description: "partly cloudy" },
-            { date: "Day 5", temp: baseTemp + random(-1, 7), humidity: baseHumidity + random(-20, 10), windSpeed: baseWind + random(0, 12), precipitation: random(0, 15), description: "sunny" }
-        ]
+        forecast: forecast
     };
 };
 
@@ -148,7 +167,6 @@ const generateMockWeatherData = (locationName) => {
 // ========================================
 async function getCoordinatesFromLocation(locationName) {
     if (!isUsingRealAPI) {
-        // For demo mode, return some reasonable coordinates based on location
         const knownLocations = {
             'birmingham': { lat: 52.4862, lon: -1.8904 },
             'birmingham, uk': { lat: 52.4862, lon: -1.8904 },
@@ -162,12 +180,7 @@ async function getCoordinatesFromLocation(locationName) {
             'edinburgh': { lat: 55.9533, lon: -3.1883 },
             'glasgow': { lat: 55.8642, lon: -4.2518 },
             'cardiff': { lat: 51.4816, lon: -3.1791 },
-            'belfast': { lat: 54.5973, lon: -5.9301 },
-            'new york': { lat: 40.7128, lon: -74.0060 },
-            'paris': { lat: 48.8566, lon: 2.3522 },
-            'berlin': { lat: 52.5200, lon: 13.4050 },
-            'tokyo': { lat: 35.6762, lon: 139.6503 },
-            'sydney': { lat: -33.8688, lon: 151.2093 }
+            'belfast': { lat: 54.5973, lon: -5.9301 }
         };
         
         const normalized = locationName.toLowerCase().trim();
@@ -175,12 +188,8 @@ async function getCoordinatesFromLocation(locationName) {
     }
 
     try {
-        // Use OpenWeatherMap Geocoding API to get coordinates for any location
         const geocodingUrl = `${OPENWEATHER_BASE_URL}${GEOCODING_ENDPOINT}?` +
             `q=${encodeURIComponent(locationName)}&limit=1&appid=${WEATHER_API_KEY}`;
-        
-        console.log('Fetching coordinates for:', locationName);
-        console.log('Geocoding URL:', geocodingUrl);
         
         const response = await fetch(geocodingUrl);
         
@@ -194,13 +203,10 @@ async function getCoordinatesFromLocation(locationName) {
             throw new Error(`Location "${locationName}" not found`);
         }
         
-        const result = { lat: data[0].lat, lon: data[0].lon };
-        console.log('✅ Found coordinates:', result);
-        return result;
+        return { lat: data[0].lat, lon: data[0].lon };
         
     } catch (error) {
         console.error('Error getting coordinates:', error);
-        // Fallback to Birmingham if geocoding fails
         return { lat: 52.4862, lon: -1.8904 };
     }
 }
@@ -215,11 +221,9 @@ async function fetchOpenWeatherData(lat, lon) {
     }
 
     try {
-        // Fetch current weather
         const currentUrl = `${OPENWEATHER_BASE_URL}${CURRENT_WEATHER_ENDPOINT}?` +
             `lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
 
-        // Fetch 5-day forecast
         const forecastUrl = `${OPENWEATHER_BASE_URL}${FORECAST_ENDPOINT}?` +
             `lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`;
 
@@ -230,20 +234,14 @@ async function fetchOpenWeatherData(lat, lon) {
             fetch(forecastUrl)
         ]);
 
-        if (!currentResponse.ok) {
-            throw new Error(`OpenWeatherMap current weather error: ${currentResponse.status} ${currentResponse.statusText}`);
-        }
-
-        if (!forecastResponse.ok) {
-            throw new Error(`OpenWeatherMap forecast error: ${forecastResponse.status} ${forecastResponse.statusText}`);
+        if (!currentResponse.ok || !forecastResponse.ok) {
+            throw new Error('API request failed');
         }
 
         const currentData = await currentResponse.json();
         const forecastData = await forecastResponse.json();
 
         console.log('✅ Successfully fetched OpenWeatherMap data');
-        console.log('Current weather:', currentData.name, currentData.main.temp + '°C');
-        console.log('Forecast points:', forecastData.list.length);
         
         return { current: currentData, forecast: forecastData };
 
@@ -261,100 +259,82 @@ function processOpenWeatherData(weatherData) {
         return null;
     }
 
+    console.log('=== PROCESSING OPENWEATHER DATA ===');
+    
     const current = weatherData.current;
     const forecastList = weatherData.forecast.list;
     const currentUKHour = getCurrentUKHour();
+    const todayUK = getTodayUKDateString();
+    const tomorrowUK = getTomorrowUKDateString();
 
-    // Process current conditions
+    console.log('Today UK:', todayUK);
+    console.log('Tomorrow UK:', tomorrowUK);
+    console.log('Current UK hour:', currentUKHour);
+
     const currentConditions = {
         temp: Math.round(current.main.temp),
         humidity: current.main.humidity,
-        windSpeed: Math.round(current.wind.speed * 3.6), // Convert m/s to km/h
+        windSpeed: Math.round(current.wind.speed * 3.6),
         description: getWeatherDescriptionFromOpenWeather(current.weather[0])
     };
 
-    // Group forecast data by day - using proper UK timezone handling
+    // Group forecast by UK date
     const dailyGroups = {};
     
-    // Get current UK date for comparison
-    const nowUK = new Date().toLocaleDateString("en-GB", {timeZone: "Europe/London"});
-    const tomorrowUK = new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString("en-GB", {timeZone: "Europe/London"});
-    
-    console.log('Current UK date:', nowUK);
-    console.log('Tomorrow UK date:', tomorrowUK);
-    console.log('Processing', forecastList.length, 'forecast items');
-    
     forecastList.forEach((item, index) => {
-        // Convert UTC timestamp to UK date/time
         const utcDate = new Date(item.dt * 1000);
         const ukDateStr = utcDate.toLocaleDateString("en-GB", {timeZone: "Europe/London"});
         const ukTimeStr = utcDate.toLocaleTimeString("en-GB", {timeZone: "Europe/London", hour12: false});
         const ukHour = parseInt(ukTimeStr.split(':')[0]);
         
-        // Create a readable date key
-        const dateKey = ukDateStr;
-        
-        console.log(`Item ${index}: UTC=${utcDate.toISOString()}, UK Date=${ukDateStr}, UK Time=${ukTimeStr}, Hour=${ukHour}`);
-        
-        if (!dailyGroups[dateKey]) {
-            dailyGroups[dateKey] = [];
+        if (index < 5) { // Debug first few items
+            console.log(`Item ${index}: UTC=${utcDate.toISOString()}, UK=${ukDateStr} ${ukTimeStr}, Hour=${ukHour}`);
         }
         
-        // Only include future times and good washing hours
-        const isToday = ukDateStr === nowUK;
+        if (!dailyGroups[ukDateStr]) {
+            dailyGroups[ukDateStr] = [];
+        }
+        
+        const isToday = ukDateStr === todayUK;
         const shouldInclude = !isToday || (ukHour > currentUKHour && isGoodTimeToHangWashing(ukHour));
         
-        if (shouldInclude) {
-            dailyGroups[dateKey].push({
+        if (shouldInclude && isGoodTimeToHangWashing(ukHour)) {
+            dailyGroups[ukDateStr].push({
                 time: `${ukHour.toString().padStart(2, '0')}:00`,
                 temp: Math.round(item.main.temp),
                 humidity: item.main.humidity,
                 windSpeed: Math.round(item.wind.speed * 3.6),
                 precipitation: Math.round((item.pop || 0) * 100),
-                isToday: isToday,
-                rawDate: ukDateStr
+                isToday: isToday
             });
         }
     });
 
-    // Create daily forecast summaries with proper date ordering
-    const forecastData = [];
-    const sortedDateKeys = Object.keys(dailyGroups).sort((a, b) => {
-        // Parse DD/MM/YYYY format and sort chronologically
-        const [dayA, monthA, yearA] = a.split('/').map(Number);
-        const [dayB, monthB, yearB] = b.split('/').map(Number);
-        const dateA = new Date(yearA, monthA - 1, dayA);
-        const dateB = new Date(yearB, monthB - 1, dayB);
+    // Sort dates chronologically and create forecast
+    const sortedDates = Object.keys(dailyGroups).sort((a, b) => {
+        const dateA = getDateFromUKString(a);
+        const dateB = getDateFromUKString(b);
         return dateA - dateB;
     });
+
+    console.log('Sorted dates:', sortedDates);
+
+    const forecastData = [];
     
-    console.log('Sorted date keys:', sortedDateKeys);
-    
-    sortedDateKeys.forEach((dateKey) => {
-        const dayData = dailyGroups[dateKey];
+    sortedDates.forEach((dateStr) => {
+        const dayData = dailyGroups[dateStr];
+        const dayName = getDayNameFromUKDate(dateStr);
         
-        // Determine proper day name
-        let dayName;
-        if (dateKey === nowUK) {
-            dayName = 'Today';
-        } else if (dateKey === tomorrowUK) {
-            dayName = 'Tomorrow';
-        } else {
-            // Parse the date and get day name
-            const [day, month, year] = dateKey.split('/').map(Number);
-            const date = new Date(year, month - 1, day);
-            dayName = date.toLocaleDateString('en-GB', { weekday: 'long' });
-        }
+        console.log(`Processing ${dayName} (${dateStr}) with ${dayData.length} hours`);
+        
+        if (dayData.length === 0) return;
 
-        if (dayData.length === 0) return; // Skip days with no valid times
-
-        // Calculate daily averages
         const avgTemp = Math.round(dayData.reduce((sum, h) => sum + h.temp, 0) / dayData.length);
         const avgHumidity = Math.round(dayData.reduce((sum, h) => sum + h.humidity, 0) / dayData.length);
         const avgWind = Math.round(dayData.reduce((sum, h) => sum + h.windSpeed, 0) / dayData.length);
         const maxPrecip = Math.max(...dayData.map(h => h.precipitation));
 
-        const dayForecast = {
+        forecastData.push({
             date: dayName,
             temp: avgTemp,
             humidity: avgHumidity,
@@ -365,23 +345,16 @@ function processOpenWeatherData(weatherData) {
                 screenRelativeHumidity: avgHumidity,
                 probOfPrecipitation: maxPrecip / 100
             }),
-            rawDate: dateKey
-        };
-
-        // Add hourly data (limited to reasonable washing hours)
-        if (dayData.length > 0) {
-            dayForecast.hourly = dayData.slice(0, 8); // Next 8 viable hours
-        }
-
-        forecastData.push(dayForecast);
-        console.log(`Added day: ${dayName} (${dateKey}) with ${dayData.length} hours`);
+            hourly: dayData.slice(0, 8),
+            rawDate: dateStr
+        });
     });
 
-    console.log('Final forecast data:', forecastData.map(d => `${d.date} (${d.rawDate})`));
+    console.log('Final forecast order:', forecastData.map(d => `${d.date} (${d.rawDate})`));
 
     return {
         current: currentConditions,
-        forecast: forecastData.slice(0, 5) // 5-day forecast
+        forecast: forecastData.slice(0, 5)
     };
 }
 
@@ -563,7 +536,6 @@ function getWeatherIcon(description) {
 }
 
 function getWeatherEmoji(description, score) {
-    // Enhanced visual feedback based on washing conditions
     if (score >= 80) {
         return description === 'sunny' ? '☀️💯' : '⛅💯';
     } else if (score >= 60) {
@@ -619,73 +591,82 @@ function getWindVisualization(windSpeed) {
 }
 
 function findBestTimes(forecast, fabricType = 'cotton') {
+    console.log('=== FINDING BEST TIMES ===');
+    console.log('Input forecast:', forecast.map(d => `${d.date} (${d.rawDate || 'no raw date'})`));
+    
     const bestTimes = [];
     const currentHour = getCurrentUKHour();
     
     // Check if it's too late today for new washing
-    const tooLateToday = currentHour >= 17; // After 5 PM
+    const tooLateToday = currentHour >= 17;
     
-    if (forecast[0].hourly && !tooLateToday) {
-        forecast[0].hourly.forEach(hour => {
-            const hourNum = parseInt(hour.time.split(':')[0]);
-            
-            // Skip past times and late evening hours
-            if (hourNum > currentHour && isGoodTimeToHangWashing(hourNum)) {
-                const score = calculateWashingScore(hour.temp, hour.humidity, hour.windSpeed, hour.precipitation);
-                if (score >= 60) {
-                    const dryingTime = calculateDryingTime(hour.temp, hour.humidity, hour.windSpeed, fabricType);
-                    const safeTime = getSafeOutdoorTime(forecast, hourNum);
-                    
-                    bestTimes.push({
-                        time: `Today ${hour.time}`,
-                        score: score,
-                        temp: hour.temp,
-                        conditions: `${hour.temp}°C, ${hour.humidity}% humidity, ${getWindVisualization(hour.windSpeed)}`,
-                        dryingTime: dryingTime,
-                        safeTime: safeTime,
-                        canFullyDry: dryingTime <= safeTime,
-                        isToday: true
-                    });
+    forecast.forEach((day, index) => {
+        console.log(`Checking ${day.date}: hourly=${day.hourly ? day.hourly.length : 0} items`);
+        
+        const isToday = day.date === 'Today';
+        
+        if (isToday && !tooLateToday && day.hourly) {
+            // Add today's hourly recommendations
+            day.hourly.forEach(hour => {
+                const hourNum = parseInt(hour.time.split(':')[0]);
+                
+                if (hourNum > currentHour && isGoodTimeToHangWashing(hourNum)) {
+                    const score = calculateWashingScore(hour.temp, hour.humidity, hour.windSpeed, hour.precipitation);
+                    if (score >= 60) {
+                        const dryingTime = calculateDryingTime(hour.temp, hour.humidity, hour.windSpeed, fabricType);
+                        const safeTime = getSafeOutdoorTime(forecast, hourNum);
+                        
+                        bestTimes.push({
+                            time: `Today ${hour.time}`,
+                            score: score,
+                            temp: hour.temp,
+                            dryingTime: dryingTime,
+                            safeTime: safeTime,
+                            canFullyDry: dryingTime <= safeTime,
+                            isToday: true,
+                            sortOrder: 0 // Today gets priority
+                        });
+                    }
                 }
-            }
-        });
-    }
-    
-    // Add future days
-    forecast.slice(1).forEach(day => {
-        const score = calculateWashingScore(day.temp, day.humidity, day.windSpeed, day.precipitation);
-        if (score >= 60) {
-            const dryingTime = calculateDryingTime(day.temp, day.humidity, day.windSpeed, fabricType);
-            const safeTime = getSafeOutdoorTime([day], 9);
-            
-            bestTimes.push({
-                time: day.date,
-                score: score,
-                temp: day.temp,
-                conditions: `${day.temp}°C, ${day.humidity}% humidity, ${getWindVisualization(day.windSpeed)}`,
-                dryingTime: dryingTime,
-                safeTime: safeTime,
-                canFullyDry: dryingTime <= safeTime,
-                isToday: false
             });
+        } else if (!isToday) {
+            // Add future day recommendations
+            const score = calculateWashingScore(day.temp, day.humidity, day.windSpeed, day.precipitation);
+            if (score >= 60) {
+                const dryingTime = calculateDryingTime(day.temp, day.humidity, day.windSpeed, fabricType);
+                const safeTime = getSafeOutdoorTime([day], 9);
+                
+                bestTimes.push({
+                    time: day.date,
+                    score: score,
+                    temp: day.temp,
+                    dryingTime: dryingTime,
+                    safeTime: safeTime,
+                    canFullyDry: dryingTime <= safeTime,
+                    isToday: false,
+                    sortOrder: index // Maintain chronological order
+                });
+            }
         }
     });
     
-    return bestTimes.sort((a, b) => {
-        // Always put "Today" items first
+    // Sort by chronological order (today first, then by forecast index)
+    const sorted = bestTimes.sort((a, b) => {
         if (a.isToday && !b.isToday) return -1;
         if (!a.isToday && b.isToday) return 1;
-        
-        // Then sort by score within each group
-        return b.score - a.score;
+        if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+        return b.score - a.score; // Then by score
     }).slice(0, 3);
+    
+    console.log('Best times found:', sorted.map(t => `${t.time} (score: ${t.score})`));
+    
+    return sorted;
 }
 
 function getWashingTips(forecast) {
     const tips = [];
     const currentHour = getCurrentUKHour();
     
-    // Add time-specific tips
     if (currentHour >= 18) {
         tips.push("It's getting late - consider washing tomorrow morning for best drying results");
     } else if (currentHour <= 6) {
@@ -741,11 +722,9 @@ async function getWeatherForecast() {
         console.log('Current UK time:', currentUKTime);
         console.log('Current UK hour:', currentHour);
         
-        // Get coordinates for the location
         const coords = await getCoordinatesFromLocation(location);
         console.log('Coordinates found:', coords);
         
-        // Fetch weather data (OpenWeatherMap or demo)
         let weatherData = null;
         let processedData = null;
         let dataSource = '';
@@ -754,7 +733,6 @@ async function getWeatherForecast() {
             weatherData = await fetchOpenWeatherData(coords.lat, coords.lon);
             
             if (weatherData) {
-                // Use real OpenWeatherMap data
                 processedData = processOpenWeatherData(weatherData);
                 dataSource = '<div class="api-status api-live">📡 Live OpenWeatherMap Data</div>';
                 console.log('✅ Using real OpenWeatherMap data for', location);
@@ -762,7 +740,6 @@ async function getWeatherForecast() {
         }
         
         if (!processedData) {
-            // Fall back to generated demo data
             processedData = generateMockWeatherData(location);
             dataSource = '<div class="api-status api-demo">🎭 Demo Data - Add OpenWeatherMap API key for real forecasts</div>';
             console.log('📱 Using generated demo data for', location);
@@ -791,9 +768,6 @@ async function getWeatherForecast() {
             
             bestTimes.forEach((time, index) => {
                 const isToday = time.isToday;
-                const isFirstToday = isToday && index === 0;
-                
-                // Find the actual best score among all times
                 const bestOverallScore = Math.max(...bestTimes.map(t => t.score));
                 const isBestOverall = time.score === bestOverallScore;
                 
@@ -804,7 +778,9 @@ async function getWeatherForecast() {
                     const hourMatch = time.time.match(/(\d{2}):00/);
                     if (hourMatch) {
                         const hour = parseInt(hourMatch[1]);
-                        const timeStr = getTimeDisplayName(hour);
+                        const timeStr = hour <= 12 ? `${hour}:00 AM` : `${hour - 12}:00 PM`;
+                        if (hour === 12) timeStr = '12:00 PM';
+                        if (hour === 0) timeStr = '12:00 AM';
                         timeDisplay = `Today ${timeStr}`;
                         hangTime = `Hang out at ${timeStr}`;
                     } else {
@@ -850,7 +826,7 @@ async function getWeatherForecast() {
                 html += `
                     <div class="best-times late-today">
                         <h2>🌙 Too Late Today</h2>
-                        <p>It's getting late (${getTimeDisplayName(currentHour)}) to hang washing in <strong>${location}</strong>.</p>
+                        <p>It's getting late (${currentHour > 12 ? (currentHour - 12) + ':00 PM' : currentHour + ':00 AM'}) to hang washing in <strong>${location}</strong>.</p>
                         <div class="late-advice">
                             <div class="advice-item">🌅 Try tomorrow morning after 8 AM</div>
                             <div class="advice-item">🏠 Consider indoor drying tonight</div>
