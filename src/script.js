@@ -273,64 +273,76 @@ function processOpenWeatherData(weatherData) {
         description: getWeatherDescriptionFromOpenWeather(current.weather[0])
     };
 
-    // Group forecast data by day
+    // Group forecast data by day - using proper UK timezone handling
     const dailyGroups = {};
     
+    // Get current UK date for comparison
+    const nowUK = new Date().toLocaleDateString("en-GB", {timeZone: "Europe/London"});
+    const tomorrowUK = new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString("en-GB", {timeZone: "Europe/London"});
+    
+    console.log('Current UK date:', nowUK);
+    console.log('Tomorrow UK date:', tomorrowUK);
+    console.log('Processing', forecastList.length, 'forecast items');
+    
     forecastList.forEach((item, index) => {
-        // Convert UTC timestamp to UK time properly
+        // Convert UTC timestamp to UK date/time
         const utcDate = new Date(item.dt * 1000);
-        const ukDateString = utcDate.toLocaleDateString("en-GB", {timeZone: "Europe/London"});
-        const ukTimeString = utcDate.toLocaleTimeString("en-GB", {timeZone: "Europe/London", hour12: false});
+        const ukDateStr = utcDate.toLocaleDateString("en-GB", {timeZone: "Europe/London"});
+        const ukTimeStr = utcDate.toLocaleTimeString("en-GB", {timeZone: "Europe/London", hour12: false});
+        const ukHour = parseInt(ukTimeStr.split(':')[0]);
         
-        // Create a proper Date object for UK timezone
-        const [day, month, year] = ukDateString.split('/');
-        const [hour, minute] = ukTimeString.split(':');
-        const ukDate = new Date(year, month - 1, day, hour, minute);
+        // Create a readable date key
+        const dateKey = ukDateStr;
         
-        const dateKey = ukDate.toDateString();
-        const hourValue = ukDate.getHours();
+        console.log(`Item ${index}: UTC=${utcDate.toISOString()}, UK Date=${ukDateStr}, UK Time=${ukTimeStr}, Hour=${ukHour}`);
         
         if (!dailyGroups[dateKey]) {
             dailyGroups[dateKey] = [];
         }
         
         // Only include future times and good washing hours
-        const todayKey = new Date().toDateString();
-        const isToday = dateKey === todayKey;
-        const shouldInclude = !isToday || (hourValue > currentUKHour && isGoodTimeToHangWashing(hourValue));
+        const isToday = ukDateStr === nowUK;
+        const shouldInclude = !isToday || (ukHour > currentUKHour && isGoodTimeToHangWashing(ukHour));
         
         if (shouldInclude) {
-            const timeLabel = `${hourValue.toString().padStart(2, '0')}:00`;
-                
             dailyGroups[dateKey].push({
-                time: timeLabel,
+                time: `${ukHour.toString().padStart(2, '0')}:00`,
                 temp: Math.round(item.main.temp),
                 humidity: item.main.humidity,
                 windSpeed: Math.round(item.wind.speed * 3.6),
-                precipitation: Math.round((item.pop || 0) * 100), // Probability of precipitation
-                isToday: isToday
+                precipitation: Math.round((item.pop || 0) * 100),
+                isToday: isToday,
+                rawDate: ukDateStr
             });
         }
     });
 
-    // Create daily forecast summaries
+    // Create daily forecast summaries with proper date ordering
     const forecastData = [];
-    const dateKeys = Object.keys(dailyGroups);
+    const sortedDateKeys = Object.keys(dailyGroups).sort((a, b) => {
+        // Parse DD/MM/YYYY format and sort chronologically
+        const [dayA, monthA, yearA] = a.split('/').map(Number);
+        const [dayB, monthB, yearB] = b.split('/').map(Number);
+        const dateA = new Date(yearA, monthA - 1, dayA);
+        const dateB = new Date(yearB, monthB - 1, dayB);
+        return dateA - dateB;
+    });
     
-    dateKeys.forEach((dateKey, index) => {
+    console.log('Sorted date keys:', sortedDateKeys);
+    
+    sortedDateKeys.forEach((dateKey) => {
         const dayData = dailyGroups[dateKey];
-        const date = new Date(dateKey);
         
-        // Get proper day names based on actual dates, not just index
-        const today = new Date().toDateString();
-        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString();
-        
+        // Determine proper day name
         let dayName;
-        if (dateKey === today) {
+        if (dateKey === nowUK) {
             dayName = 'Today';
-        } else if (dateKey === tomorrow) {
+        } else if (dateKey === tomorrowUK) {
             dayName = 'Tomorrow';
         } else {
+            // Parse the date and get day name
+            const [day, month, year] = dateKey.split('/').map(Number);
+            const date = new Date(year, month - 1, day);
             dayName = date.toLocaleDateString('en-GB', { weekday: 'long' });
         }
 
@@ -352,7 +364,8 @@ function processOpenWeatherData(weatherData) {
                 screenTemperature: avgTemp,
                 screenRelativeHumidity: avgHumidity,
                 probOfPrecipitation: maxPrecip / 100
-            })
+            }),
+            rawDate: dateKey
         };
 
         // Add hourly data (limited to reasonable washing hours)
@@ -361,7 +374,10 @@ function processOpenWeatherData(weatherData) {
         }
 
         forecastData.push(dayForecast);
+        console.log(`Added day: ${dayName} (${dateKey}) with ${dayData.length} hours`);
     });
+
+    console.log('Final forecast data:', forecastData.map(d => `${d.date} (${d.rawDate})`));
 
     return {
         current: currentConditions,
