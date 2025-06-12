@@ -761,8 +761,35 @@ async function getWeatherForecast() {
         
         html += dataSource;
         
-        // Add current time info
-        html += `<div class="time-info">🕐 Current UK time: ${currentUKTime}</div>`;
+        // Add current time info with better formatting
+        const currentTime = getCurrentUKTime();
+        const [datePart, timePart] = currentTime.split(', ');
+        const [day, month, year] = datePart.split('/');
+        const [hour, minute, second] = timePart.split(':');
+        
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        
+        const date = new Date(year, month - 1, day);
+        const dayName = dayNames[date.getDay()];
+        const monthName = monthNames[month - 1];
+        
+        const displayHour = parseInt(hour);
+        const ampm = displayHour >= 12 ? 'PM' : 'AM';
+        const displayHour12 = displayHour === 0 ? 12 : displayHour > 12 ? displayHour - 12 : displayHour;
+        
+        html += `
+            <div class="time-info">
+                <div class="current-time">
+                    <span class="time-icon">🕐</span>
+                    <div class="time-details">
+                        <div class="time-main">${displayHour12}:${minute} ${ampm}</div>
+                        <div class="time-date">${dayName}, ${day} ${monthName} ${year}</div>
+                    </div>
+                </div>
+            </div>
+        `;
         
         if (bestTimes.length > 0) {
             const fabricSelect = document.getElementById('fabricType');
@@ -917,7 +944,15 @@ async function getWeatherForecast() {
         tips.forEach(tip => {
             html += `<li>${tip}</li>`;
         });
-        html += '</ul></div>';
+        html += `
+                </ul>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="tips/" style="display: inline-block; background: linear-gradient(45deg, #4a7c59, #2d5a27); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                        📚 View Complete Drying Guide
+                    </a>
+                </div>
+            </div>
+        `;
         
         resultsDiv.innerHTML = html;
         
